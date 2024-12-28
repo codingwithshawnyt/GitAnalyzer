@@ -273,7 +273,7 @@ Install GitAnalyzer using one of the following methods:
 Here's a basic example of using GitAnalyzer:
 
 ```python
-from gitanalyzer import Repository
+from GitAnalyzer import Repository
 
 # Initialize repository (local or remote)
 repo = Repository('path/to/repository')
