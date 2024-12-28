@@ -7,6 +7,7 @@
 	<img src="https://img.shields.io/github/last-commit/codingwithshawnyt/GitAnalyzer?style=default&logo=git&logoColor=white&color=0080ff" alt="last-commit">
 	<img src="https://img.shields.io/github/languages/top/codingwithshawnyt/GitAnalyzer?style=default&color=0080ff" alt="repo-top-language">
 	<img src="https://img.shields.io/github/languages/count/codingwithshawnyt/GitAnalyzer?style=default&color=0080ff" alt="repo-language-count">
+	<img src="[https://img.shields.io/github/languages/count/codingwithshawnyt/GitAnalyzer?style=default&color=0080ff](https://static.pepy.tech/badge/matplotlib_ai/month)" alt="repo-download-count">
 </p>
 <br>
 
