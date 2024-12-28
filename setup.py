@@ -16,23 +16,13 @@ detailed_description = (
     'file changes, diffs, and source code, and supports exporting data to CSV format.'
 )
 
-# Fetching the version from the package's __init__.py
-def fetch_version():
-    init_path = path.join(path.dirname(__file__), 'gitanalyzer', '__init__.py')
-    with open(init_path) as file:
-        for line in file:
-            if line.startswith('__version__'):
-                version_delimiter = '"' if '"' in line else "'"
-                return line.split(version_delimiter)[1]
-    raise RuntimeError("Version string not found.")
-
 setup(
     name='GitAnalyzer',
     description='A toolkit for Mining Software Repositories (MSR)',
     long_description=detailed_description,
     author='Shawn Ray',
     author_email='shawnray5699@gmail.com',
-    version=fetch_version(),
+    version='1.0.0',  # Hardcoded version
     packages=find_packages('.', exclude=['tests*']),
     url='https://github.com/codingwithshawnyt/GitAnalyzer',  # Assuming the URL remains unchanged
     license='Apache License',
