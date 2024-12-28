@@ -18,7 +18,7 @@ detailed_description = (
 
 # Fetching the version from the package's __init__.py
 def fetch_version():
-    init_path = path.join(path.dirname(__file__), 'pydriller', '__init__.py')
+    init_path = path.join(path.dirname(__file__), 'gitanalyzer', '__init__.py')
     with open(init_path) as file:
         for line in file:
             if line.startswith('__version__'):
