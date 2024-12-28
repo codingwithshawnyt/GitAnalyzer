@@ -1,56 +1,56 @@
-.. _api_reference_toplevel:
+.. _api_documentation:
 
-=============
-API Reference
-=============
+================
+API Documentation
+================
 
-Version
---------
-.. py:data:: pydriller.__version__
+Package Version
+--------------
+.. py:data:: gitanalyzer.__version__
 
-   Current Pydriller version.
+   Current GitAnalyzer package version.
 
 
-Git
--------------
+Repository Access
+----------------
 
-.. automodule:: pydriller.git
+.. automodule:: gitanalyzer.git
    :members:
    :undoc-members:
    :special-members:
    :exclude-members: __dict__, __weakref__, __eq__, __str__, __hash__
 
-Repository
-----------------
+Repository Management
+-------------------
 
-.. automodule:: pydriller.repository
+.. automodule:: gitanalyzer.repository
    :members:
    :undoc-members:
    :special-members:
    :exclude-members: __dict__, __weakref__, __eq__, __str__, __hash__
 
-Commit
+Commit Information
 ----------------
 
-.. automodule:: pydriller.domain.commit
+.. automodule:: gitanalyzer.domain.commit
    :members:
    :undoc-members:
    :special-members:
    :exclude-members: __dict__, __weakref__, __eq__, __str__, __hash__
 
-Developer
-----------------
+Contributor
+----------
 
-.. automodule:: pydriller.domain.developer
+.. automodule:: gitanalyzer.domain.developer
    :members:
    :undoc-members:
    :special-members:
    :exclude-members: __dict__, __weakref__, __eq__, __str__, __hash__
 
-Process Metrics
-----------------
+Repository Analytics
+------------------
 
-.. automodule:: pydriller.metrics.process.process_metric
+.. automodule:: gitanalyzer.metrics.process.process_metric
    :members:
    :undoc-members:
    :special-members:

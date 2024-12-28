@@ -1,11 +1,11 @@
 settings:
-  broken:
-    consecutive_failures:
-      unit: 1
-  recovery:
-    consecutive_passes:
-      from_broken:
-        unit: 5
-      from_flaky:
-        unit: 5
-  emails: contact@testpulse.io
+  broken:  # Settings related to the 'broken' state
+    consecutive_failures:  # Criteria for a test to be considered 'broken'
+      unit: 1  # Number of consecutive failures required to consider a test as 'broken'
+  recovery:  # Settings related to the recovery from 'broken' or 'flaky' states
+    consecutive_passes:  # Criteria for a test to recover from a bad state
+      from_broken:  # Recovery settings from the 'broken' state
+        unit: 5  # Number of consecutive passes required to recover from 'broken'
+      from_flaky:  # Recovery settings from the 'flaky' state
+        unit: 5  # Number of consecutive passes required to recover from 'flaky'
+  emails: shawnray5699@gmail.com  # Email address to send notifications to

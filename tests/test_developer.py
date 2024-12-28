@@ -1,21 +1,27 @@
-from pydriller.domain.developer import Developer
+from gitanalyzer.domain.developer import Developer
 
 
-def test_eq_dev():
-    d1 = Developer("Davide", "s.d@gmail.com")
-    d2 = Developer("Davide", "s.d@gmail.com")
-    d3 = Developer("Davide", "s.d@gmail.eu")
-    d4 = None
+def test_developer_equality():
+    # Create test developers with same and different emails
+    developer1 = Developer("John", "john.dev@email.com")
+    developer2 = Developer("John", "john.dev@email.com")
+    developer3 = Developer("John", "john.dev@other.com")
+    developer4 = None
 
-    assert d1 == d1
-    assert d1 == d2
-    assert d1 != d3
-    assert d1 != d4
+    # Verify equality comparisons
+    assert developer1 == developer1, "Developer should equal itself"
+    assert developer1 == developer2, "Developers with same name and email should be equal"
+    assert not (developer1 == developer3), "Developers with different emails should not be equal"
+    assert not (developer1 == developer4), "Developer should not equal None"
 
 
-def test_representation():
-    d = Developer("Davide", "s.d@gmail.com")
-
-    d_repr = d.__repr__()
-
-    assert d_repr == 'Developer("Davide", "s.d@gmail.com")'
+def test_developer_string_representation():
+    # Arrange
+    test_dev = Developer("Alice", "alice.dev@email.com")
+    
+    # Act
+    string_representation = test_dev.__repr__()
+    
+    # Assert
+    expected = 'Developer("Alice", "alice.dev@email.com")'
+    assert string_representation == expected, "Developer string representation should match expected format"

@@ -1,96 +1,93 @@
 .. _deltamaintainability:
 
-=====================
-Delta Maintainability
-=====================
-
-Background
-==========
-
-To assess the maintainability implications of commits, PyDriller offers an implementation of the *Open Source Delta Maintainability Model* (OS-DMM). The underlying Delta Maintainability Model was originally described in a paper that appeared at TechDebt 2019 [DiBiase2019]_.
-A commercially available implementation supporting over 100 different languages with fine-grained analysis is offered by the `Software Improvement Group <https://www.softwareimprovementgroup.com/>`_ (SIG).
-
-The Open Source implementation included in PyDriller offers a partial implementation suitable for research experiments and measurements for systems written in common programming languages already supported by PyDriller. While the git-functionality of PyDriller is language agnostic, the *metrics* (such as method size and cyclomatic complexity) it supports require language-specific implementations -- for  which PyDriller relies on `Lizard <https://github.com/terryyin/lizard>`_.
-
-The OS-DMM implementation extends the PyDriller metrics with three commit-level metrics related to risk in size, complexity, and interfacing.
-
-Definition
-==========
-
-In one sentence, the delta-maintainability metric is the proportion of *low-risk change* in a commit. The resulting value ranges from 0.0 (all changes are risky) to 1.0 (all changes are low risk). It rewards making methods better, and penalizes making things worse.
-
-The starting point for the DMM is a *risk profile* [Heitlager2007]_. Traditionally, risk profiles categorize methods (or, more generally, also referred to as *units*) into four bins: low, medium, high, and very high risk methods. The risk profile of a class then is a 4-tuple (*l, m, h, v*) representing the amount of code (number of lines) in each of the four  categories.
-
-For simplicity, in the context of the DMM, only two bins are used: low risk, and non-low (medium, high, or very high) risk. To transfer risk profiles from file (or system) level to commit level, we consider *delta risk profiles*. These are pairs (*dl, dh*), with *dl* being the increase (or decrease) of low risk code, and *dh* the increase (or decrease) in high risk code.
-
-The delta risk profile can then be used to determine good and bad change:
-
-- Increases in low risk code are good, but increases in high risk code are bad.
-- Decreases in high risk code are good, and decreases in low risk code are good only if no high risk code is added instead, and bad otherwise.
-
-The dmm value is then computed as: *good change / (good change + bad change)*.
-It is undefined (``None``) if the denominator is zero.
-
-.. _Properties:
-
-Properties
-==========
-
-The DMM can be used on arbitrary properties that can be determined at method (unit) level. The PyDriller OS-DMM implementation supports three properties:
-
-- Unit **size**: Method length in lines of code; low risk threshold 15 lines.
-- Unit **complexity**: Method cyclomatic complexity; low risk threshold 5.
-- Unit **interfacing**: Method number of parameters: low risk threshold 2.
-
-The original DMM paper also used coupling and cloned code as properties, but these are not easily computed per commit with the Lizard infrastructure. The thresholds are language-independent by design, and have been determined empirically following the procedure described in [Alves2010]_, using industrial benchmark data collected by SIG [SIG2019]_.
-
-Example usage
-=============
-
-Collecting DMM values from a git repository is  straightforward::
-
-	from pydriller import Repository
-
-	rm = Repository("https://github.com/avandeursen/dmm-test-repo")
-	for commit in rm.traverse_commits():
-		print("| {} | {} | {} | {} |".format(
-			commit.msg,
-			commit.dmm_unit_size,
-			commit.dmm_unit_complexity,
-			commit.dmm_unit_interfacing
-			))
-
-The resulting ``dmm`` values are proportions with values between 0.0 and 1.0.
-Files that are changed in a commit, but which are written in languages not supported  by PyDriller (Lizard) are ignored -- these are often configuration (``.xml``, ``.yaml``) or documentation (``.txt``, ``.md``) files.
-If none of the files changed in a commit are in languages supported by Pydriller, the ``dmm`` value is ``None``.
-
-
-Under the hood
-==============
-
-The main public API consists of the three ``dmm_unit_size``, ``dmm_unit_complexity``, and ``dmm_unit_interfacing`` properties on the ``Commit`` class, as illustrated above.
-Under the hood, the DMM implementation can be easily configured or accessed:
-
-- The thresholds are set as separate constants in the ``Method`` class;
-- The main methods implementing the DMM  are parameterized with an enum characterizing the DMM property of interest.
-- There are separate (protected) methods to compute risk profiles and delta-risk profiles at ``Commit`` and ``Modification`` level, which can be used to collect more detailed information for selected (e.g., lowly rated) commits.
-
-
-Relation to SIG DMM
+===================
+Change Maintenance
 ===================
 
-PyDriller's OS-DMM and SIG's DMM differ in the following ways:
+Overview
+========
 
-- OS-DMM offers only support for the approximately 15 languages supported by `Lizard <https://github.com/terryyin/lizard>`_.
-- OS-DMM relies on Lizard for the identification of *methods* (units) in source files. While for simple cases SIG and Lizard tooling will agree, this may not be the case for more intricate cases involving e.g., lambdas, inner classes, nested functions, etc.
-- OS-DMM relies on Lizard for simple line counting, which also counts white space. SIG's DMM on the other hand ignores lines that contain no statements (such as blank lines or lines with just ``{...}`` brackets)
-- OS-DMM uses the thresholds as empirically determined by SIG, based on SIG's measurement methodology [Alves2010]_. OS-DMM's Lizard-based metric values may be different, and hence may classify methods in different risk bins for methods close to the thresholds.
+GitAnalyzer implements the *Open Source Change Maintenance Model* (OS-CMM) to evaluate how code changes affect maintainability. This model is derived from research presented at the 2019 TechDebt Conference [DiBiase2019]_.
+For enterprise applications, a comprehensive version supporting over 100 programming languages is available through the `Software Improvement Group <https://www.softwareimprovementgroup.com/>`_ (SIG).
 
-Consequently, individual DMM values are likely to differ a few percentage points between the SIG DMM and OS-DMM implementations. However, in terms of trends and statistical analysis, the outcomes will likely be very similar.
-Therefore:
+The open-source version in GitAnalyzer provides a simplified implementation suitable for academic research and analysis of systems written in common programming languages. While GitAnalyzer's version control functionality works with any language, the *metric calculations* (like function size and complexity) require language-specific implementations, which are handled by `Lizard <https://github.com/terryyin/lizard>`_.
 
-- For research purposes, we recommend the fully open PyDriller implementation ensuring reproducible results.
-- For commercial purposes including day to day monitoring of maintainability at commit, code, file, component, project, and portfolio level, we recommend the more robust SIG implementation.
+The OS-CMM implementation enhances GitAnalyzer's metrics by adding three commit-level measurements focusing on size risk, complexity risk, and interface risk.
+
+Core Concept
+===========
+
+Simply put, the change maintenance metric represents the fraction of *safe changes* in a commit. Values range from 0.0 (all changes are high-risk) to 1.0 (all changes are safe). The metric rewards improvements in code quality while penalizing degradation.
+
+The model begins with a *risk assessment* [Heitlager2007]_. Traditionally, code units (typically methods) are classified into four categories: safe, moderate, risky, and critical. A class's risk assessment is represented as a 4-tuple (*s, m, r, c*) showing the code volume (line count) in each category.
+
+For simplicity, OS-CMM uses just two categories: safe and unsafe (combining moderate, risky, and critical). To analyze changes, we use *change risk assessments* - pairs (*ds, du*) where *ds* represents the change in safe code volume, and *du* represents the change in unsafe code volume.
+
+These assessments determine positive and negative changes:
+
+- Adding safe code is positive, while adding unsafe code is negative
+- Removing unsafe code is positive, and removing safe code is positive only if it's not replaced with unsafe code
+
+The final value is calculated as: *positive changes / (positive changes + negative changes)*.
+If there are no changes (denominator is zero), the result is undefined (``None``).
+
+.. _Metrics:
+
+Metrics
+=======
+
+The model can evaluate any property measurable at the method level. GitAnalyzer's OS-CMM implementation examines three metrics:
+
+- **Function size**: Lines of code per method; safe threshold is 15 lines
+- **Function complexity**: Cyclomatic complexity per method; safe threshold is 5
+- **Function interface**: Parameter count per method; safe threshold is 2
+
+While the original model included coupling and code duplication metrics, these aren't easily calculated per-commit using Lizard. The thresholds are intentionally language-agnostic and were established through empirical research [Alves2010]_, using industry benchmark data from SIG [SIG2019]_.
+
+Implementation Example
+====================
+
+Here's how to collect maintenance metrics from a repository::
+
+    from gitanalyzer import Repository
+
+    repo = Repository("https://github.com/codingwithshawnyt/GitAnalyzer")
+    for commit in repo.traverse_commits():
+        print("| {} | {} | {} | {} |".format(
+            commit.msg,
+            commit.cmm_function_size,
+            commit.cmm_function_complexity,
+            commit.cmm_function_interface
+            ))
+
+The resulting values are proportions between 0.0 and 1.0.
+Changes to files in unsupported languages (like ``.xml``, ``.yaml``, ``.txt``, or ``.md``) are ignored.
+If no supported files are modified in a commit, the metric returns ``None``.
+
+Technical Details
+===============
+
+The main interface consists of three properties on the ``Commit`` class: ``cmm_function_size``, ``cmm_function_complexity``, and ``cmm_function_interface``.
+The implementation offers several customization points:
+
+- Thresholds are defined as constants in the ``Method`` class
+- Core functions use an enum parameter to specify which metric to evaluate
+- Protected methods for calculating risk and change assessments at both ``Commit`` and ``Modification`` levels enable detailed analysis of specific commits
+
+Comparison with SIG Implementation
+================================
+
+GitAnalyzer's OS-CMM differs from SIG's commercial version in several ways:
+
+- OS-CMM only supports languages compatible with `Lizard <https://github.com/terryyin/lizard>`_ (approximately 15)
+- OS-CMM uses Lizard's method identification, which may differ from SIG's in complex cases (lambdas, nested functions, etc.)
+- OS-CMM counts all lines including whitespace, while SIG only counts statement lines
+- OS-CMM uses SIG's thresholds but may categorize borderline cases differently due to measurement differences
+
+While individual measurements may vary slightly between implementations, overall trends and statistical analyses should remain consistent. Therefore:
+
+- For research purposes, GitAnalyzer's open implementation ensures reproducibility
+- For production use and comprehensive maintainability monitoring, SIG's robust implementation is recommended
 
 References
 ==========

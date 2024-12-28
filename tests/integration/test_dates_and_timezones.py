@@ -1,42 +1,66 @@
-# Copyright 2018 Davide Spadini
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
-from pydriller.repository import Repository
-from datetime import datetime, timezone, timedelta
 import logging
+from datetime import datetime, timezone, timedelta
+from gitanalyzer.repository import Repository
 
-logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s',
-                    level=logging.INFO)
+# Configure logging with timestamp and level
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s [%(levelname)s] %(message)s'
+)
+
+def test_timezone_positive_offset():
+    """
+    Test commit dates with a positive timezone offset
+    """
+    # Initialize repository with specific commit
+    repo = Repository(
+        path='https://github.com/codingwithshawnyt/GitAnalyzer',
+        commit_hash='29e929fbc5dc6a2e9c620069b24e2a143af4285f'
+    )
+    
+    # Get all commits
+    commits = repo.traverse_commits()
+    first_commit = list(commits)[0]
+    
+    # Create expected datetime (UTC+2)
+    expected_time = datetime(
+        year=2016,
+        month=4,
+        day=4,
+        hour=13,
+        minute=21,
+        second=25,
+        tzinfo=timezone(timedelta(hours=2))
+    )
+    
+    # Verify commit date matches expected
+    assert first_commit.author_date == expected_time
 
 
-def test_one_timezone():
-    lc = list(
-        Repository('test-repos/branches_merged',
-                   single='29e929fbc5dc6a2e9c620069b24e2a143af4285f').traverse_commits())
-
-    to_zone = timezone(timedelta(hours=2))
-    dt = datetime(2016, 4, 4, 13, 21, 25, tzinfo=to_zone)
-
-    assert lc[0].author_date == dt
-
-
-def test_between_dates_reversed():
-    lc = list(
-        Repository('test-repos/different_files',
-                   single='375de7a8275ecdc0b28dc8de2568f47241f443e9').traverse_commits())
-
-    to_zone = timezone(timedelta(hours=-4))
-    dt = datetime(2016, 10, 8, 17, 57, 49, tzinfo=to_zone)
-
-    assert lc[0].author_date == dt
+def test_timezone_negative_offset():
+    """
+    Test commit dates with a negative timezone offset
+    """
+    # Initialize repository with specific commit
+    repo = Repository(
+        path='https://github.com/codingwithshawnyt/GitAnalyzer',
+        commit_hash='375de7a8275ecdc0b28dc8de2568f47241f443e9'
+    )
+    
+    # Get all commits
+    commits = repo.traverse_commits()
+    first_commit = list(commits)[0]
+    
+    # Create expected datetime (UTC-4)
+    expected_time = datetime(
+        year=2016,
+        month=10,
+        day=8,
+        hour=17,
+        minute=57,
+        second=49,
+        tzinfo=timezone(timedelta(hours=-4))
+    )
+    
+    # Verify commit date matches expected
+    assert first_commit.author_date == expected_time

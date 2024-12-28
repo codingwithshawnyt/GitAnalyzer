@@ -1,58 +1,61 @@
-# Copyright 2018 Davide Spadini
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 import logging
 from datetime import datetime, timezone, timedelta
 
-from pydriller.repository import Repository
+from gitanalyzer.repository import Repository
 
-logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s',
-                    level=logging.INFO)
+# Configure logging settings
+logging.basicConfig(
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    level=logging.INFO
+)
 
-to_zone = timezone(timedelta(hours=-4))
-dt1 = datetime(2016, 10, 8, 17, 0, 0, tzinfo=to_zone)
-dt2 = datetime(2016, 10, 8, 17, 59, 0, tzinfo=to_zone)
-
-
-def test_between_dates():
-    list_commits = list(Repository('test-repos/different_files',
-                                   since=dt1,
-                                   to=dt2).traverse_commits())
-
-    assert len(list_commits) == 2
-    assert list_commits[0].hash == 'a1b6136f978644ff1d89816bc0f2bd86f6d9d7f5'
-    assert list_commits[1].hash == '375de7a8275ecdc0b28dc8de2568f47241f443e9'
+# Define timezone and test timestamps
+eastern_timezone = timezone(timedelta(hours=-4))
+start_time = datetime(2016, 10, 8, 17, 0, 0, tzinfo=eastern_timezone)
+end_time = datetime(2016, 10, 8, 17, 59, 0, tzinfo=eastern_timezone)
 
 
-def test_between_dates_without_timezone():
-    dt1 = datetime(2016, 10, 8, 21, 0, 0)
-    dt2 = datetime(2016, 10, 8, 21, 59, 0)
-    list_commits = list(Repository('test-repos/different_files',
-                                   since=dt1,
-                                   to=dt2).traverse_commits())
+def test_commit_range_with_timezone():
+    """Test commit retrieval between two dates with timezone information"""
+    commits = list(Repository(
+        'https://github.com/codingwithshawnyt/GitAnalyzer',
+        since=start_time,
+        to=end_time
+    ).get_commits())
 
-    assert len(list_commits) == 2
-    assert list_commits[0].hash == 'a1b6136f978644ff1d89816bc0f2bd86f6d9d7f5'
-    assert list_commits[1].hash == '375de7a8275ecdc0b28dc8de2568f47241f443e9'
+    # Verify expected results
+    assert len(commits) == 2
+    assert commits[0].commit_id == 'a1b6136f978644ff1d89816bc0f2bd86f6d9d7f5'
+    assert commits[1].commit_id == '375de7a8275ecdc0b28dc8de2568f47241f443e9'
 
 
-def test_between_dates_reversed():
-    lc = list(Repository('test-repos/different_files',
-                         since=dt1,
-                         to=dt2,
-                         order='reverse').traverse_commits())
+def test_commit_range_timezone_naive():
+    """Test commit retrieval between two dates without timezone information"""
+    local_start = datetime(2016, 10, 8, 21, 0, 0)
+    local_end = datetime(2016, 10, 8, 21, 59, 0)
+    
+    commits = list(Repository(
+        'https://github.com/codingwithshawnyt/GitAnalyzer',
+        since=local_start,
+        to=local_end
+    ).get_commits())
 
-    assert len(lc) == 2
-    assert lc[0].hash == '375de7a8275ecdc0b28dc8de2568f47241f443e9'
-    assert lc[1].hash == 'a1b6136f978644ff1d89816bc0f2bd86f6d9d7f5'
+    # Validate results
+    assert len(commits) == 2
+    assert commits[0].commit_id == 'a1b6136f978644ff1d89816bc0f2bd86f6d9d7f5'
+    assert commits[1].commit_id == '375de7a8275ecdc0b28dc8de2568f47241f443e9'
+
+
+def test_commit_range_chronological_reverse():
+    """Test commit retrieval in reverse chronological order"""
+    commit_history = list(Repository(
+        'https://github.com/codingwithshawnyt/GitAnalyzer',
+        since=start_time,
+        to=end_time,
+        sort='reverse'
+    ).get_commits())
+
+    # Check reverse order
+    assert len(commit_history) == 2
+    assert commit_history[0].commit_id == '375de7a8275ecdc0b28dc8de2568f47241f443e9'
+    assert commit_history[1].commit_id == 'a1b6136f978644ff1d89816bc0f2bd86f6d9d7f5'

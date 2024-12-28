@@ -1,44 +1,44 @@
 .. _commit_toplevel:
 
 =============
-Commit 
+Commit Object
 =============
 
-A Commit object has all the information of a Git commit, and much more. More specifically:
+The Commit object encapsulates all Git commit information and additional metadata. It provides the following attributes:
 
-* **hash** *(str)*: hash of the commit
-* **msg** *(str)*: commit message
-* **author** *(Developer)*: commit author (name, email)
-* **committer** *(Developer)*: commit committer (name, email) 
-* **author_date** *(datetime)*: authored date
-* **author_timezone** *(int)*: author timezone (expressed in seconds from epoch)
-* **committer_date** *(datetime)*: commit date
-* **committer_timezone** *(int)*: commit timezone (expressed in seconds from epoch)
-* **branches** *(List[str])*: List of branches that contain this commit
-* **in_main_branch** *(Bool)*: True if the commit is in the main branch
-* **merge** *(Bool)*: True if the commit is a merge commit
-* **modified_files** *(List[ModifiedFile])*: list of modified files in the commit (see :ref:`modifiedfile_toplevel`)
-* **parents** *(List[str])*: list of the commit parents
-* **project_name** *(str)*: project name 
-* **project_path** *(str)*: project path 
-* **deletions** *(int)*: number of deleted lines in the commit (as shown from –shortstat).
-* **insertions** *(int)*: number of added lines in the commit (as shown from –shortstat).
-* **lines** *(int)*: total number of added + deleted lines in the commit (as shown from –shortstat).
-* **files** *(int)*: number of files changed in the commit (as shown from –shortstat).
-* **dmm_unit_size** *(float)*: DMM metric value for the unit size property.
-* **dmm_unit_complexity** *(float)*: DMM metric value for the unit complexity property.
-* **dmm_unit_interfacing** *(float)*: DMM metric value for the unit interfacing property.
+* **hash** *(str)*: unique identifier of the commit
+* **msg** *(str)*: message associated with the commit
+* **author** *(Contributor)*: individual who authored the changes (name, email)
+* **committer** *(Contributor)*: individual who committed the changes (name, email)
+* **author_date** *(datetime)*: timestamp when the commit was authored
+* **author_timezone** *(int)*: timezone offset of author (in seconds from epoch)
+* **committer_date** *(datetime)*: timestamp when the commit was committed
+* **committer_timezone** *(int)*: timezone offset of committer (in seconds from epoch)
+* **branches** *(List[str])*: all branches containing this commit
+* **in_main_branch** *(Bool)*: indicates if commit exists in main branch
+* **merge** *(Bool)*: indicates if this is a merge commit
+* **modified_files** *(List[ModifiedFile])*: files changed in this commit (see :ref:`modifiedfile_toplevel`)
+* **parents** *(List[str])*: parent commit identifiers
+* **project_name** *(str)*: name of the repository
+* **project_path** *(str)*: path to the repository
+* **deletions** *(int)*: count of removed lines (from --shortstat)
+* **insertions** *(int)*: count of added lines (from --shortstat)
+* **lines** *(int)*: total lines changed (additions + deletions from --shortstat)
+* **files** *(int)*: total files modified (from --shortstat)
+* **dmm_unit_size** *(float)*: Delta Maintainability Model size metric
+* **dmm_unit_complexity** *(float)*: Delta Maintainability Model complexity metric
+* **dmm_unit_interfacing** *(float)*: Delta Maintainability Model interfacing metric
 
 
-Example::
+Usage Example::
 
-    for commit in Repository('path/to/the/repo').traverse_commits():
+    from gitanalyzer import Repository
+
+    repo = Repository('path/to/repository')
+    for commit in repo.traverse_commits():
         print(
-            'The commit {} has been modified by {}, '
-            'committed by {} in date {}'.format(
-                commit.hash,
-                commit.author.name,
-                commit.committer.name,
-                commit.committer_date
-            )
+            f'Commit {commit.hash} was authored by {commit.author.name}, '
+            f'committed by {commit.committer.name} on {commit.committer_date}'
         )
+
+For more examples and detailed usage, visit: https://github.com/codingwithshawnyt/GitAnalyzer

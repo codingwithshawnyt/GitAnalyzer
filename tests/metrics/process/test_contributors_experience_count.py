@@ -3,50 +3,81 @@ from datetime import datetime
 
 import pytest
 
-from pydriller.metrics.process.contributors_experience import \
+from gitanalyzer.metrics.process.contributors_experience import \
     ContributorsExperience
 
-TEST_COMMIT_DATA = [
-   ('test-repos/pydriller',
-    'domain/modification.py',
-    'fdf671856b260aca058e6595a96a7a0fba05454b',
-    'ab36bf45859a210b0eae14e17683f31d19eea041',
-    100.0),
-   ('test-repos/pydriller',
-    'pydriller/git_repository.py',
-    'e9854bbea1cb7b7f06cbb559f7b06724d11ae1e5',
-    'e9854bbea1cb7b7f06cbb559f7b06724d11ae1e5',
-    100.0),
-   ('test-repos/pydriller',
-    'pydriller/git_repository.py',
-    'e9854bbea1cb7b7f06cbb559f7b06724d11ae1e5',
-    '9d0924301e4fae00eea6d00945bf834455e9a2a6',
-    round(100*28/30, 2))
+# Test data for commit-based analysis
+COMMIT_TEST_CASES = [
+    {
+        'repo': 'test-repos/gitanalyzer',
+        'file': 'domain/modification.py',
+        'start_commit': 'fdf671856b260aca058e6595a96a7a0fba05454b',
+        'end_commit': 'ab36bf45859a210b0eae14e17683f31d19eea041',
+        'expected_result': 100.0
+    },
+    {
+        'repo': 'test-repos/gitanalyzer',
+        'file': 'gitanalyzer/repository_handler.py',
+        'start_commit': 'e9854bbea1cb7b7f06cbb559f7b06724d11ae1e5',
+        'end_commit': 'e9854bbea1cb7b7f06cbb559f7b06724d11ae1e5',
+        'expected_result': 100.0
+    },
+    {
+        'repo': 'test-repos/gitanalyzer',
+        'file': 'gitanalyzer/repository_handler.py',
+        'start_commit': 'e9854bbea1cb7b7f06cbb559f7b06724d11ae1e5',
+        'end_commit': '9d0924301e4fae00eea6d00945bf834455e9a2a6',
+        'expected_result': round(100 * 28/30, 2)
+    }
 ]
 
+@pytest.mark.parametrize('test_case', COMMIT_TEST_CASES)
+def test_experience_by_commits(test_case):
+    """Test contributor experience calculation using commit range."""
+    analyzer = ContributorsExperience(
+        path_to_repo=test_case['repo'],
+        from_commit=test_case['start_commit'],
+        to_commit=test_case['end_commit']
+    )
+    
+    results = analyzer.count()
+    file_path = str(Path(test_case['file']))
+    assert results[file_path] == test_case['expected_result']
 
-@pytest.mark.parametrize('path_to_repo, filepath, from_commit, to_commit, expected', TEST_COMMIT_DATA)
-def test_with_commits(path_to_repo, filepath, from_commit, to_commit, expected):
-    metric = ContributorsExperience(path_to_repo=path_to_repo,
-                                    from_commit=from_commit,
-                                    to_commit=to_commit)
-    count = metric.count()
-    filepath = str(Path(filepath))
-    assert count[filepath] == expected
-
-
-TEST_DATE_DATA = [
-   ('test-repos/pydriller', 'domain/modification.py', datetime(2018, 3, 21), datetime(2018, 3, 23), 100.0),
-   ('test-repos/pydriller', 'pydriller/git_repository.py', datetime(2018, 8, 1), datetime(2018, 8, 2), 100.0),
-   ('test-repos/pydriller', 'pydriller/git_repository.py',  datetime(2018, 7, 23), datetime(2018, 8, 2), round(100*28/30, 2))
+# Test data for date-based analysis
+DATE_TEST_CASES = [
+    {
+        'repo': 'test-repos/gitanalyzer',
+        'file': 'domain/modification.py',
+        'start_date': datetime(2018, 3, 21),
+        'end_date': datetime(2018, 3, 23),
+        'expected_result': 100.0
+    },
+    {
+        'repo': 'test-repos/gitanalyzer',
+        'file': 'gitanalyzer/repository_handler.py',
+        'start_date': datetime(2018, 8, 1),
+        'end_date': datetime(2018, 8, 2),
+        'expected_result': 100.0
+    },
+    {
+        'repo': 'test-repos/gitanalyzer',
+        'file': 'gitanalyzer/repository_handler.py',
+        'start_date': datetime(2018, 7, 23),
+        'end_date': datetime(2018, 8, 2),
+        'expected_result': round(100 * 28/30, 2)
+    }
 ]
 
-
-@pytest.mark.parametrize('path_to_repo, filepath, since, to, expected', TEST_DATE_DATA)
-def test_with_dates(path_to_repo, filepath, since, to, expected):
-    metric = ContributorsExperience(path_to_repo=path_to_repo,
-                                    since=since,
-                                    to=to)
-    count = metric.count()
-    filepath = str(Path(filepath))
-    assert count[filepath] == expected
+@pytest.mark.parametrize('test_case', DATE_TEST_CASES)
+def test_experience_by_dates(test_case):
+    """Test contributor experience calculation using date range."""
+    analyzer = ContributorsExperience(
+        path_to_repo=test_case['repo'],
+        since=test_case['start_date'],
+        to=test_case['end_date']
+    )
+    
+    results = analyzer.count()
+    file_path = str(Path(test_case['file']))
+    assert results[file_path] == test_case['expected_result']

@@ -1,25 +1,31 @@
-from pydriller import Repository
-from pydriller.domain.developer import Developer
+from gitanalyzer import Repository
+from gitanalyzer.domain.developer import Developer
 
 
-PATH_TO_REPO = "test-repos/contentmine_mailmap"
+REPOSITORY_PATH = "test-repos/contentmine_mailmap"
 
 
-def test_without_mailmap():
-    sam = Developer("Sam Pablo Kuper", "sampablokuper@riseup.net")
-    thomas = Developer("My Name", "tarrow@users.noreply.github.com")
+def test_mailmap_disabled():
+    """Test author mapping without .mailmap file"""
+    expected_author1 = Developer("Sam Pablo Kuper", "sampablokuper@riseup.net")
+    expected_author2 = Developer("My Name", "tarrow@users.noreply.github.com")
 
-    commits = list(Repository(path_to_repo=PATH_TO_REPO).traverse_commits())
+    repository = Repository(path_to_repo=REPOSITORY_PATH)
+    commit_history = list(repository.traverse_commits())
 
-    assert commits[0].author == sam
-    assert commits[-1].author == thomas
+    # Verify author information matches expected values
+    assert commit_history[0].author == expected_author1
+    assert commit_history[-1].author == expected_author2
 
 
-def test_with_mailmap():
-    sam = Developer("Sam Pablo Kuper", "sampablokuper@uclmail.net")
-    thomas = Developer("Thomas Arrow", "thomasarrow@gmail.com")
+def test_mailmap_enabled():
+    """Test author mapping with .mailmap file"""
+    expected_author1 = Developer("Sam Pablo Kuper", "sampablokuper@uclmail.net")
+    expected_author2 = Developer("Thomas Arrow", "thomasarrow@gmail.com")
 
-    commits = list(Repository(path_to_repo=PATH_TO_REPO, use_mailmap=True).traverse_commits())
+    repository = Repository(path_to_repo=REPOSITORY_PATH, use_mailmap=True)
+    commit_history = list(repository.traverse_commits())
 
-    assert commits[0].author == sam
-    assert commits[-1].author == thomas
+    # Verify author information is correctly mapped
+    assert commit_history[0].author == expected_author1
+    assert commit_history[-1].author == expected_author2

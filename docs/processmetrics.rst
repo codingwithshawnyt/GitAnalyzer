@@ -4,230 +4,226 @@
 Process Metrics
 ==================
 
-Process metrics capture aspects of the development process rather than aspects about the code itself.
-From release 1.11 PyDriller can calculate ``change_set``, ``code churn``, ``commits count``, ``contributors count``, ``contributors experience``, ``history complexity``, ``hunks count``, ``lines count`` and ``minor contributors``. Everything in just one line!
+Process metrics focus on the development process rather than the code characteristics.
+Starting from version 1.11, GitAnalyzer can compute metrics such as ``change_set``, ``code churn``, ``commits count``, ``contributors count``, ``contributors experience``, ``history complexity``, ``hunks count``, ``lines count``, and ``minor contributors`` all in a single command!
 
-The metrics can be run between two commits (setting up the parameters ``from_commit`` and ``to_commit``) or between two dates (setting up the parameters ``since`` and ``to``)
+These metrics can be calculated between two specific commits (using the parameters ``from_commit`` and ``to_commit``) or between two dates (using the parameters ``since`` and ``to``).
 
-Below an example of how call the metrics.
+Here's an example of how to use these metrics.
 
 
 Change Set
 ==========
 
-This metric measures the of files committed together.
+This metric evaluates the number of files committed together.
 
-The class ``ChangeSet`` has two methods:
+The ``ChangeSet`` class provides two methods:
 
-* ``max()`` to count the *maximum* number of files committed together;
-* ``avg()`` to count the *average* number of files committed together. **Note:** The average value is rounded off to the nearest integer.
+* ``max()`` to determine the *maximum* number of files committed together;
+* ``avg()`` to calculate the *average* number of files committed together, rounded to the nearest whole number.
 
-For example::
+Example usage::
 
-    from pydriller.metrics.process.change_set import ChangeSet
+    from gitanalyzer.metrics.process.change_set import ChangeSet
     metric = ChangeSet(path_to_repo='path/to/the/repo',
-                       from_commit='from commit hash',
-                       to_commit='to commit hash')
+                       from_commit='start commit hash',
+                       to_commit='end commit hash')
     
-    maximum = metric.max()
-    average = metric.avg()
-    print('Maximum number of files committed together: {}'.format(maximum))
-    print('Average number of files committed together: {}'.format(average))
+    max_files = metric.max()
+    avg_files = metric.avg()
+    print('Maximum number of files committed together: {}'.format(max_files))
+    print('Average number of files committed together: {}'.format(avg_files))
 
-will print the maximum and average number of files committed together in the evolution period ``[from_commit, to_commit]``. 
+This will output the maximum and average number of files committed together during the specified period ``[from_commit, to_commit]``.
 
-**Note:** differently from the other metrics below, the scope of this metrics is the evolution period rather than the single files.
-
-
-It is possible to specify the dates as follows::
+To use date ranges instead::
 
     from datetime import datetime
-    from pydriller.metrics.process.change_set import ChangeSet
+    from gitanalyzer.metrics.process.change_set import ChangeSet
     metric = ChangeSet(path_to_repo='path/to/the/repo',
                        since=datetime(2019, 1, 1),
                        to=datetime(2019, 12, 31))
     
-    maximum = metric.max()
-    average = metric.avg()
-    print('Maximum number of files committed together: {}'.format(maximum))
-    print('Average number of files committed together: {}'.format(average))
+    max_files = metric.max()
+    avg_files = metric.avg()
+    print('Maximum number of files committed together: {}'.format(max_files))
+    print('Average number of files committed together: {}'.format(avg_files))
 
-The code above will print the maximum and average number of files committed together between the ``1st January 2019`` and ``31st December 2019``. 
+This code will display the maximum and average number of files committed together between ``1st January 2019`` and ``31st December 2019``.
 
 
 Code Churn
 ==========
 
-This metric measures the code churns of a file.
+This metric quantifies the code churns of a file.
 
-Depending on the parametrization, a code churn is the sum of either 
+Code churn can be calculated as either:
     
     (a) (added lines - removed lines) or 
     (b) (added lines + removed lines)
     
-across the analyzed commits.
+over the selected commits.
 
-The class ``CodeChurn`` has four methods:
+The ``CodeChurn`` class includes four methods:
 
-* ``count()`` to count the *total* size of code churns of a file;
-* ``max()`` to count the *maximum* size of a code churn of a file;
-* ``avg()`` to count the *average* size of a code churn of a file. **Note:** The average value is rounded off to the nearest integer;
-* ``get_added_and_removed_lines()`` to retrieve the *exact* number of lines added and removed for each file as a tuple (added_lines, removed_lines).
+* ``count()`` to determine the *total* code churn size of a file;
+* ``max()`` to find the *maximum* code churn size of a file;
+* ``avg()`` to compute the *average* code churn size of a file, rounded to the nearest whole number;
+* ``get_added_and_removed_lines()`` to fetch the *exact* number of lines added and removed per file as a tuple (added_lines, removed_lines).
 
-For example::
+Example::
 
-    from pydriller.metrics.process.code_churn import CodeChurn
+    from gitanalyzer.metrics.process.code_churn import CodeChurn
     metric = CodeChurn(path_to_repo='path/to/the/repo',
-                       from_commit='from commit hash',
-                       to_commit='to commit hash')
-    files_count = metric.count()
-    files_max = metric.max()
-    files_avg = metric.avg()
-    added_removed_lines = metric.get_added_and_removed_lines()
+                       from_commit='start commit hash',
+                       to_commit='end commit hash')
+    total_churn = metric.count()
+    max_churn = metric.max()
+    avg_churn = metric.avg()
+    added_removed = metric.get_added_and_removed_lines()
     
-    print('Total code churn for each file: {}'.format(files_count))
-    print('Maximum code churn for each file: {}'.format(files_max))
-    print('Average code churn for each file: {}'.format(files_avg))
-    print('Lines added and removed for each file: {}'.format(added_removed_lines))
+    print('Total code churn for each file: {}'.format(total_churn))
+    print('Maximum code churn for each file: {}'.format(max_churn))
+    print('Average code churn for each file: {}'.format(avg_churn))
+    print('Lines added and removed for each file: {}'.format(added_removed))
 
-will print the total, maximum, and average number of code churns for each modified file, along with the number of lines added and removed, in the evolution period ``[from_commit, to_commit]``.
+This will output the total, maximum, and average code churns for each modified file, along with the added and removed lines, during the period ``[from_commit, to_commit]``.
 
-The calculation variant (a) or (b) can be configured by setting the ``CodeChurn`` init parameter:
+You can configure the calculation method (a or b) by setting the ``CodeChurn`` initialization parameter:
 
 * ``add_deleted_lines_to_churn``
 
-To retrieve the added and removed lines for each file directly, the ``get_added_and_removed_lines()`` method can be used, which returns a dictionary with file paths as keys and a tuple (added_lines, removed_lines) as values.
+To directly retrieve the added and removed lines for each file, use the ``get_added_and_removed_lines()`` method, which returns a dictionary with file paths as keys and a tuple (added_lines, removed_lines) as values.
 
 
 Commits Count
 =============
 
-This metric measures the number of commits made to a file.
+This metric counts the number of commits made to a file.
 
-The class ``CommitCount`` has one method:
+The ``CommitCount`` class has one method:
 
-* ``count()`` to count the number of commits to a file.
+* ``count()`` to determine the number of commits made to a file.
 
-For example::
+Example::
 
-    from pydriller.metrics.process.commits_count import CommitsCount
+    from gitanalyzer.metrics.process.commits_count import CommitsCount
     metric = CommitsCount(path_to_repo='path/to/the/repo',
-                          from_commit='from commit hash',
-                          to_commit='to commit hash')
-    files = metric.count()
-    print('Files: {}'.format(files))
+                          from_commit='start commit hash',
+                          to_commit='end commit hash')
+    commit_numbers = metric.count()
+    print('Number of commits per file: {}'.format(commit_numbers))
 
-will print the number of commits for each modified file in the evolution period ``[from_commit, to_commit]``. 
+This will display the number of commits for each modified file during the period ``[from_commit, to_commit]``.
 
 
 Contributors Count
 ==================
 
-This metric measures the number of developers that contributed to a file.
+This metric evaluates the number of developers who have contributed to a file.
 
-The class ``ContributorsCount`` has two methods:
+The ``ContributorsCount`` class offers two methods:
 
-* ``count()`` to count the number of contributors who modified a file;
-* ``count_minor()`` to count the number of *minor* contributors who modified a file, i.e., those that contributed less than 5% to the file.
+* ``count()`` to determine the number of contributors who modified a file;
+* ``count_minor()`` to identify the number of *minor* contributors who modified a file, defined as those contributing less than 5% to the file.
 
-For example::
+Example::
 
-    from pydriller.metrics.process.contributors_count import ContributorsCount
+    from gitanalyzer.metrics.process.contributors_count import ContributorsCount
     metric = ContributorsCount(path_to_repo='path/to/the/repo',
-                               from_commit='from commit hash',
-                               to_commit='to commit hash')
-    count = metric.count()
-    minor = metric.count_minor()
-    print('Number of contributors per file: {}'.format(count))
-    print('Number of "minor" contributors per file: {}'.format(minor))
+                               from_commit='start commit hash',
+                               to_commit='end commit hash')
+    total_contributors = metric.count()
+    minor_contributors = metric.count_minor()
+    print('Number of contributors per file: {}'.format(total_contributors))
+    print('Number of "minor" contributors per file: {}'.format(minor_contributors))
 
-will print the number of developers that contributed to each of the modified file in the evolution period ``[from_commit, to_commit]`` and the number of developers that contributed less than 5% to each of the modified file in the evolution period ``[from_commit, to_commit]``. 
+This will output the number of developers that contributed to each modified file during the period ``[from_commit, to_commit]`` and the number of developers that contributed less than 5% to each file.
 
 
 Contributors Experience
 ========================
 
-This metric measures the percetage of the lines authored by the highest contributor of a file.
+This metric quantifies the percentage of lines authored by the most significant contributor of a file.
 
-The class ``ContributorExperience`` has one method:
+The ``ContributorExperience`` class has one method:
 
-* ``count()`` to count the number of lines authored by the highest contributor of a file;
+* ``count()`` to determine the percentage of lines authored by the top contributor of a file.
 
-For example::
+Example::
 
-    from pydriller.metrics.process.contributors_experience import ContributorsExperience
+    from gitanalyzer.metrics.process.contributors_experience import ContributorsExperience
     metric = ContributorsExperience(path_to_repo='path/to/the/repo',
-                          	    from_commit='from commit hash',
-                                    to_commit='to commit hash')
-    files = metric.count()
-    print('Files: {}'.format(files))
+                                    from_commit='start commit hash',
+                                    to_commit='end commit hash')
+    top_contributor_lines = metric.count()
+    print('Percentage of lines by the top contributor per file: {}'.format(top_contributor_lines))
 
-will print the percentage of the lines authored by the highest contributor for each of the modified file in the evolution period ``[from_commit, to_commit]``. 
-
+This will display the percentage of lines authored by the top contributor for each modified file during the period ``[from_commit, to_commit]``.
 
 
 Hunks Count
 ===========
 
-This metric measures the number of hunks made to a file.
-As a hunk is a continuous block of changes in a ``diff``, this number assesses how fragmented the commit file is (i.e. lots of changes all over the file versus one big change).
+This metric counts the number of hunks in a file.
+A hunk represents a continuous block of changes in a ``diff``, and this metric helps assess how fragmented the changes are across the file.
 
-The class ``HunksCount`` has one method:
+The ``HunksCount`` class has one method:
 
-* ``count()`` to count the median number of hunks of a file.
+* ``count()`` to determine the median number of hunks per file.
 
-For example::
+Example::
 
-    from pydriller.metrics.process.hunks_count import HunksCount
+    from gitanalyzer.metrics.process.hunks_count import HunksCount
     metric = HunksCount(path_to_repo='path/to/the/repo',
-                        from_commit='from commit hash',
-                        to_commit='to commit hash')
-    files = metric.count()
-    print('Files: {}'.format(files))
+                        from_commit='start commit hash',
+                        to_commit='end commit hash')
+    hunk_numbers = metric.count()
+    print('Median number of hunks per file: {}'.format(hunk_numbers))
 
-will print the median number of hunks for each of the modified file in the evolution period ``[from_commit, to_commit]``. 
+This will output the median number of hunks for each modified file during the period ``[from_commit, to_commit]``.
 
 
 Lines Count
 ===========
 
-This metric measures the number of added and removed lines in a file.
-The class ``LinesCount`` has seven methods:
+This metric evaluates the number of added and removed lines in a file.
+The ``LinesCount`` class provides seven methods:
 
-* ``count()`` to count the total number of added and removed lines for each modified file;
-* ``count_added()``, ``max_added()`` and ``avg_added()`` to count the total, maximum and average number of added lines for each modified file;
-* ``count_removed()``, ``max_removed()`` and ``avg_removed()`` to count the total, maximum and average number of removed lines for each modified file.
+* ``count()`` to determine the total number of added and removed lines for each modified file;
+* ``count_added()``, ``max_added()`` and ``avg_added()`` to calculate the total, maximum, and average number of added lines for each modified file;
+* ``count_removed()``, ``max_removed()`` and ``avg_removed()`` to calculate the total, maximum, and average number of removed lines for each modified file.
 
-**Note:** The average values are rounded off to the nearest integer.
+**Note:** The average values are rounded to the nearest integer.
 
-For example::
+For added lines::
 
-    from pydriller.metrics.process.lines_count import LinesCount
+    from gitanalyzer.metrics.process.lines_count import LinesCount
+    metric = LinesCount(path_to_repo='path/to/the/repo',
+                        from_commit='start commit hash',
+                        to_commit='end commit hash')
+    
+    added_total = metric.count_added()
+    added_maximum = metric.max_added()
+    added_average = metric.avg_added()
+    print('Total lines added per file: {}'.format(added_total))
+    print('Maximum lines added per file: {}'.format(added_maximum))
+    print('Average lines added per file: {}'.format(added_average))
+
+This will display the total, maximum, and average number of lines added for each modified file during the period ``[from_commit, to_commit]``.
+
+For removed lines::
+
+    from gitanalyzer.metrics.process.lines_count import LinesCount
     metric = LinesCount(path_to_repo='path/to/the/repo',
                         from_commit='from commit hash',
                         to_commit='to commit hash')
     
-    added_count = metric.count_added()
-    added_max = metric.max_added()
-    added_avg = metric.avg_added()
-    print('Total lines added per file: {}'.format(added_count))
-    print('Maximum lines added per file: {}'.format(added_max))
-    print('Average lines added per file: {}'.format(added_avg))
+    removed_total = metric.count_removed()
+    removed_maximum = metric.max_removed()
+    removed_average = metric.avg_removed()
+    print('Total lines removed per file: {}'.format(removed_total))
+    print('Maximum lines removed per file: {}'.format(removed_maximum))
+    print('Average lines removed per file: {}'.format(removed_average))
 
-will print the total, maximum and average number of lines added for each modified file in the evolution period ``[from_commit, to_commit]``. 
-
-While::
-
-    from pydriller.metrics.process.lines_count import LinesCount
-    metric = LinesCount(path_to_repo='path/to/the/repo',
-                        from_commit='from commit hash',
-                        to_commit='to commit hash')
-    
-    removed_count = metric.count_removed()
-    removed_max = metric.max_removed()
-    removed_avg = metric.avg_removed()
-    print('Total lines removed per file: {}'.format(removed_count))
-    print('Maximum lines removed per file: {}'.format(removed_max))
-    print('Average lines removed per file: {}'.format(removed_avg))
-
-will print the total, maximum and average number of lines removed for each modified file in the evolution period ``[from_commit, to_commit]``. 
+This will display the total, maximum, and average number of lines removed for each modified file during the period ``[from_commit, to_commit]``.

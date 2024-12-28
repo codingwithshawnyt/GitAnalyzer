@@ -1,6 +1,11 @@
 [flake8]
+# Display the source code generating the error
 show-source = True
+# Count total number of errors and warnings
 count = True
+# Show statistics of errors
 statistics = True
+# Maximum allowed line length
 max-line-length = 150
+# Directories and files to exclude from checks
 exclude = .github,venv,build,dist,docs,test-repos,.venv,tmp.py

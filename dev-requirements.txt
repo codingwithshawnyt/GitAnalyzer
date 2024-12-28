@@ -1,4 +1,4 @@
-mypy
-flake8
-types-mock
-pytest-cov
+mypy # Static type checker for Python
+flake8 # Tool for style guide enforcement
+types-mock # Type stubs for the mock library
+pytest-cov # Plugin for pytest to measure code coverage

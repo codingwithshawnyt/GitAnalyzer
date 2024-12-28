@@ -1,15 +1,15 @@
-@PHONY: checkall lint typecheck testcoverage test
+.PHONY: all_checks static_analysis type_check coverage run_tests
 
-checkall: typecheck lint testcoverage
+all_checks: type_check static_analysis coverage
 
-lint:
+static_analysis:
 	flake8
 
-typecheck:
-	mypy --ignore-missing-imports pydriller/ tests/
+type_check:
+	mypy --ignore-missing-imports gitanalyzer/ tests/
 
-testcoverage:
-	pytest --cov-report term --cov=pydriller tests/
+coverage:
+	pytest --cov-report term --cov=gitanalyzer tests/
 
-test:
+run_tests:
 	pytest

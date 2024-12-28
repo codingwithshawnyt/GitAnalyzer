@@ -1,12 +1,12 @@
-comment:
-  layout: "reach, diff, flags, files"
-  behavior: default
-  require_changes: false  # if true: only post the comment if coverage changes
-  require_base: no        # [yes :: must have a base report to post]
-  require_head: yes       # [yes :: must have a head report to post]
+.comment:
+  layout: "reach, diff, flags, files"  # Defines the layout of the comment posted by Codecov
+  behavior: default                    # Sets the behavior of the comment (default, once, etc.)
+  require_changes: false               # Only post the comment if coverage changes (false means always post)
+  require_base: no                     # Must have a base report to post (no means it's not required)
+  require_head: yes                    # Must have a head report to post (yes means it's required)
 
 coverage:
   status:
     project:
       default:
-        threshold: 1
+        threshold: 1                   # Minimum coverage percentage change needed to fail the check

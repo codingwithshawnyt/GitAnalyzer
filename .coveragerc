@@ -1,16 +1,20 @@
 [run]
-source = pydriller
+source = gitanalyzer  # Specify the main package to measure coverage for
 
 [report]
-exclude_lines =
-    if self.debug:
-    pragma: no cover
-    raise NotImplementedError
-    if __name__ == .__main__.:
-exclude_also =
-    @(abc\.)?abstractmethod
-ignore_errors = True
-include = */pydriller/*
-omit =
-    tests/*
-    */__init__.py/*
+exclude_lines =  # Lines to exclude from coverage reports
+    if self.debug:  # Exclude debug conditional lines
+    pragma: no cover  # Exclude lines marked explicitly to be not covered
+    raise NotImplementedError  # Exclude lines that raise NotImplementedError
+    if __name__ == .__main__.:  # Exclude script entry point check (note: this line seems to have a typo)
+
+exclude_also =  # Additional patterns to exclude from coverage
+    @(abc\.)?abstractmethod  # Exclude abstract methods, optionally prefixed by 'abc.'
+
+ignore_errors = True  # Continue generating reports even if some files are problematic
+
+include = */gitanalyzer/*  # Include all subdirectories within 'gitanalyzer' for coverage
+
+omit =  # Files or directories to omit from coverage data
+    tests/*  # Omit all files in the 'tests' directory
+    */__init__.py/*  # Omit all '__init__.py' files in any directory

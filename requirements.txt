@@ -1,4 +1,4 @@
+types-pytz
 gitpython
 pytz
-types-pytz
 lizard

@@ -4,29 +4,28 @@
 ModifiedFile
 =============
 
-You can get a list of modified files as well as their diffs and current source code from each commit. All *Modifications* can be obtained by iterating over the ModifiedFile object. Each modification object references a modified file and has the following fields:
+This document details how to retrieve a collection of modified files, their differences, and the current source code from each commit. Each instance of *Modifications* can be accessed by iterating over the ModifiedFile object. Every modification instance points to a modified file and includes the following attributes:
 
-* **old_path**: old path of the file (can be ``None`` if the file is added)
-* **new_path**: new path of the file (can be ``None`` if the file is deleted)
-* **filename**: return only the filename (e.g., given a path-like-string such as "/Users/dspadini/pydriller/myfile.py" returns “myfile.py”)
-* **change_type**: type of the change: can be Added, Deleted, Modified, or Renamed. If you use `change_type.name` you get `ADD`, `DELETE`, `MODIFY`, `RENAME`.
-* **diff**: diff of the file as Git presents it (e.g., starting with @@ xx,xx @@).
-* **diff_parsed**: diff parsed in a dictionary containing the added and deleted lines. The dictionary has 2 keys: “added” and “deleted”, each containing a list of Tuple (int, str) corresponding to (number of line in the file, actual line).
-* **added_lines**: number of lines added
-* **deleted_lines**: number of lines removed
-* **source_code**: source code of the file (can be ``None`` if the file is deleted or only renamed)
-* **source_code_before**: source code of the file before the change (can be ``None`` if the file is added or only renamed)
-* **methods**: list of methods of the file. The list might be empty if the programming language is not supported or if the file is not a source code file. These are the methods **after** the change.
-* **methods_before**: list of methods of the file **before** the change (e.g., before the commit.)
-* **changed_methods**: subset of *methods* containing **only** the changed methods. 
-* **nloc**: Lines Of Code (LOC) of the file
-* **complexity**: Cyclomatic Complexity of the file
-* **token_count**: Number of Tokens of the file
+* **old_path**: the previous path of the file (returns ``None`` if the file is newly added)
+* **new_path**: the updated path of the file (returns ``None`` if the file has been removed)
+* **filename**: extracts just the filename (for example, from a path string like "/Users/dspadini/gitanalyzer/myfile.py" it would return “myfile.py”)
+* **change_type**: describes the type of modification: Added, Deleted, Modified, or Renamed. Using `change_type.name` will yield `ADD`, `DELETE`, `MODIFY`, `RENAME`.
+* **diff**: the file's diff as presented by Git (typically starts with @@ xx,xx @@).
+* **diff_parsed**: a dictionary-formatted parsed diff showing lines that were added or deleted. This dictionary includes two keys: “added” and “deleted”, each with a list of tuples (int, str) representing (line number, line content).
+* **added_lines**: tally of lines added
+* **deleted_lines**: tally of lines removed
+* **source_code**: the current source code of the file (returns ``None`` if the file has been deleted or merely renamed)
+* **source_code_before**: the source code of the file prior to modification (returns ``None`` if the file was added or only renamed)
+* **methods**: a list of methods in the file post-modification. This list may be empty if the programming language lacks support or if the file is not a source code file.
+* **methods_before**: a list of methods in the file prior to modification.
+* **changed_methods**: a subset of *methods* that includes **only** the methods that were altered. 
+* **nloc**: Number of Lines Of Code (LOC) in the file
+* **complexity**: the Cyclomatic Complexity of the file
+* **token_count**: the total number of tokens in the file
 
-**NOTE**: the list of modifications might be empty if the commit is a merge commit. For more info on this, check out `this post <https://haacked
-.com/archive/2014/02/21/reviewing-merge-commits/>`_.
+**NOTE**: the modifications list may be empty if the commit is a merge commit. For additional information on this topic, visit `this post <https://github.com/codingwithshawnyt/GitAnalyzer>`_.
 
-For example::
+Example usage::
 
     for commit in Repository('path/to/the/repo').traverse_commits():
         for m in commit.modified_files:

@@ -2,53 +2,71 @@ from pathlib import Path
 from datetime import datetime
 
 import pytest
-from pydriller.metrics.process.history_complexity import HistoryComplexity
+from gitanalyzer.metrics.process.history_complexity import HistoryComplexity
 
-TEST_COMMIT_DATA = [
-    ('test-repos/pydriller',                      # path_to_repo
-     'scm/git_repository.py',                     # filepath
-     '90ca34ebfe69629cb7f186a1582fc38a73cc572e',  # from_commit
-     '90ca34ebfe69629cb7f186a1582fc38a73cc572e',  # to_commit
-     40.49                                        # expected
-     ),
-    ('test-repos/pydriller',                      # path_to_repo
-     'scm/git_repository.py',                     # filepath
-     '71e053f61fc5d31b3e31eccd9c79df27c31279bf',  # from_commit
-     '90ca34ebfe69629cb7f186a1582fc38a73cc572e',  # to_commit
-     47.05                                        # expected
-     ),
-    ('https://github.com/geerlingguy/ansible-role-solr',  # path_to_repo
-     'tasks/main.yml',                                    # filepath
-     '7fb350c30be1124b51aab4a88352428e0a853b9a',          # from_commit
-     '678429591513fe86045e892a1da680c8ac36e00f',          # to_commit
-     .0                                                   # expected
-     )
+# Test data for commit-based tests
+COMMIT_TEST_CASES = [
+    {
+        'repository': 'test-repos/gitanalyzer',
+        'file_path': 'scm/git_repository.py',
+        'initial_commit': '90ca34ebfe69629cb7f186a1582fc38a73cc572e',
+        'final_commit': '90ca34ebfe69629cb7f186a1582fc38a73cc572e',
+        'expected_value': 40.49
+    },
+    {
+        'repository': 'test-repos/gitanalyzer',
+        'file_path': 'scm/git_repository.py',
+        'initial_commit': '71e053f61fc5d31b3e31eccd9c79df27c31279bf',
+        'final_commit': '90ca34ebfe69629cb7f186a1582fc38a73cc572e',
+        'expected_value': 47.05
+    },
+    {
+        'repository': 'https://github.com/codingwithshawnyt/GitAnalyzer',
+        'file_path': 'tasks/main.yml',
+        'initial_commit': '7fb350c30be1124b51aab4a88352428e0a853b9a',
+        'final_commit': '678429591513fe86045e892a1da680c8ac36e00f',
+        'expected_value': 0.0
+    }
 ]
 
+@pytest.mark.parametrize('test_case', COMMIT_TEST_CASES)
+def test_complexity_with_commit_range(test_case):
+    analyzer = HistoryComplexity(
+        path_to_repo=test_case['repository'],
+        from_commit=test_case['initial_commit'],
+        to_commit=test_case['final_commit']
+    )
+    
+    result = analyzer.count()
+    normalized_path = str(Path(test_case['file_path']))
+    assert result[normalized_path] == test_case['expected_value']
 
-@pytest.mark.parametrize('path_to_repo, filepath, from_commit, to_commit, expected', TEST_COMMIT_DATA)
-def test_with_commits(path_to_repo, filepath, from_commit, to_commit, expected):
-    metric = HistoryComplexity(path_to_repo=path_to_repo,
-                               from_commit=from_commit,
-                               to_commit=to_commit)
-
-    count = metric.count()
-    filepath = str(Path(filepath))
-    assert count[filepath] == expected
-
-
-TEST_DATE_DATA = [
-    ('test-repos/pydriller', 'scm/git_repository.py', datetime(2018, 3, 22, 11, 30), datetime(2018, 3, 23), 40.49),
-    ('test-repos/pydriller', 'scm/git_repository.py', datetime(2018, 3, 22, 11, 30), datetime(2018, 3, 27), 47.05),
+# Test data for date-based tests
+DATE_TEST_CASES = [
+    {
+        'repository': 'test-repos/gitanalyzer',
+        'file_path': 'scm/git_repository.py',
+        'start_date': datetime(2018, 3, 22, 11, 30),
+        'end_date': datetime(2018, 3, 23),
+        'expected_value': 40.49
+    },
+    {
+        'repository': 'test-repos/gitanalyzer',
+        'file_path': 'scm/git_repository.py',
+        'start_date': datetime(2018, 3, 22, 11, 30),
+        'end_date': datetime(2018, 3, 27),
+        'expected_value': 47.05
+    }
 ]
 
-
-@pytest.mark.parametrize('path_to_repo, filepath, since, to, expected', TEST_DATE_DATA)
-def test_with_dates(path_to_repo, filepath, since, to, expected):
-    metric = HistoryComplexity(path_to_repo=path_to_repo,
-                               since=since,
-                               to=to)
-
-    count = metric.count()
-    filepath = str(Path(filepath))
-    assert count[filepath] == expected
+@pytest.mark.parametrize('test_case', DATE_TEST_CASES)
+def test_complexity_with_date_range(test_case):
+    analyzer = HistoryComplexity(
+        path_to_repo=test_case['repository'],
+        since=test_case['start_date'],
+        to=test_case['end_date']
+    )
+    
+    result = analyzer.count()
+    normalized_path = str(Path(test_case['file_path']))
+    assert result[normalized_path] == test_case['expected_value']

@@ -3,40 +3,49 @@
 .. highlight:: python
 
 ==================
-Getting Started
+Quick Start Guide
 ==================
 
-Using PyDriller is very simple. You only need to create `Repository`: this class will receive in input the path to the repository and will return a generator that iterates over the commits. For example::
+GitAnalyzer is designed to be straightforward and user-friendly. The main component is the `Repository` class, which accepts a repository path and generates an iterator for commit analysis. Here's a basic example::
 
-    for commit in Repository('path/to/the/repo').traverse_commits():
-        print('Hash {}, author {}'.format(commit.hash, commit.author.name))
+    for commit in Repository('path/to/your/repository').traverse_commits():
+        print('Commit ID: {}, Developer: {}'.format(commit.hash, commit.author.name))
 
-will print the name of the developers for each commit. 
+This code snippet will display the developer information for each commit in the repository.
 
-Inside `Repository`, you will have to configure which projects to analyze, for which commits, for which dates etc. For all the possible
-configurations, have a look at :ref:`repository_toplevel`.
+The `Repository` class offers various configuration options to specify which projects, commits, and time periods to analyze. For detailed configuration options, please refer to :ref:`repository_toplevel`.
 
-We can also pass a list of repositories (both local and remote), and PyDriller will analyze sequentially. In case of a remote repository, PyDriller will clone it in a temporary folder, and delete it afterwards. For example::
+GitAnalyzer supports analyzing multiple repositories in sequence, including both local and remote sources. When working with remote repositories, GitAnalyzer creates a temporary local clone and removes it after analysis. Here's an example::
 
-    urls = ["repos/repo1", "repos/repo2", "https://github.com/ishepard/pydriller.git", "repos/repo3", "https://github.com/apache/hadoop.git"]
-    for commit in Repository(path_to_repo=urls).traverse_commits():
-        print("Project {}, commit {}, date {}".format(
+    repository_list = [
+        "local/repo1",
+        "local/repo2",
+        "https://github.com/codingwithshawnyt/GitAnalyzer.git",
+        "local/repo3",
+        "https://github.com/apache/hadoop.git"
+    ]
+    
+    for commit in Repository(path_to_repo=repository_list).traverse_commits():
+        print("Repository: {}, Commit ID: {}, Time: {}".format(
                commit.project_path, commit.hash, commit.author_date))
 
 
-Let's make another example: print all the modified files for every commit. This does the magic::
+Here's another example that shows how to track file modifications in each commit::
 
-    for commit in Repository('path/to/the/repo').traverse_commits():
-        for file in commit.modified_files:
-            print('Author {} modified {} in commit {}'.format(commit.author.name, file.filename, commit.hash))
+    for commit in Repository('path/to/your/repository').traverse_commits():
+        for modified_file in commit.modified_files:
+            print('Developer {} changed {} in commit {}'.format(
+                commit.author.name, modified_file.filename, commit.hash))
 
-That's it!
+Simple as that!
 
-Behind the scenes, PyDriller opens the Git repository and extracts all the necessary information. Then, the framework returns a generator that can iterate over the commits. 
+Under the hood, GitAnalyzer interfaces with the Git repository to extract relevant information and provides a generator for commit iteration.
 
-Furthermore, PyDriller can calculate structural metrics of every file changed in a commit. To calculate these metrics, Pydriller relies on `Lizard <https://github.com/terryyin/lizard>`_, a powerful tool that can analyze source code of many different programming languages, both at class and method level! ::
+Additionally, GitAnalyzer can compute structural metrics for modified files in each commit. These calculations are powered by `Lizard <https://github.com/terryyin/lizard>`_, a versatile tool that analyzes source code across various programming languages at both class and method levels::
 
-    for commit in Repository('path/to/the/repo').traverse_commits():
-        for file in commit.modified_files:
-            print('{} has complexity of {}, and it contains {} methods'.format(
-                  file.filename, file.complexity, len(file.methods)))
+    for commit in Repository('path/to/your/repository').traverse_commits():
+        for modified_file in commit.modified_files:
+            print('File: {} | Complexity Score: {} | Method Count: {}'.format(
+                  modified_file.filename, 
+                  modified_file.complexity, 
+                  len(modified_file.methods)))

@@ -1,13 +1,16 @@
 version: 2
 
+# Build environment configuration
 build:
   os: "ubuntu-22.04"
   tools:
     python: "3.11"
 
+# Sphinx documentation builder configuration
 sphinx:
   configuration: docs/conf.py
 
+# Python environment setup
 python:
   install:
     - requirements: docs/requirements.txt

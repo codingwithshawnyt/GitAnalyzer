@@ -1,160 +1,154 @@
-.. _repository_toplevel:
+.. _gitanalyzer_main:
 
 ============
-Repository
+GitAnalyzer
 ============
-`Repository` is the main class of Pydriller, responsible for returning the list of commits you want.
-One of the main advantages of using PyDriller to mine software repositories is that it is highly configurable. We will now see all the options that one can pass to Repository.
+The `GitAnalyzer` class serves as the core component of the library, designed to extract and process git repository commits. 
+One of the key strengths of GitAnalyzer is its extensive configurability, allowing users to fine-tune their repository analysis. Let's explore the various configuration options available.
 
-Simple Scenario
+Getting Started
 ===============
-This is the "Hello World" of Pydriller::
+Here's a basic example to begin with::
 
-    for commit in Repository("/Users/dspadini/myrepo").traverse_commits():
+    for commit in GitAnalyzer("/path/to/your/repo").get_commits():
         print(commit.hash)
 
-The function `traverse_commits()` of `Repository` will return the selected commits, in this simple case *all of them*.
-Now let's see how we can customize `Repository`.
+The `get_commits()` method returns an iterator of the specified commits. Without any parameters, it will process *all commits* in the repository.
+Let's explore how to customize the `GitAnalyzer` to meet your specific needs.
 
-Selecting projects to analyze
-=============================
-The only required parameter of `Repository` is **path_to_repo**, which specifies the repo(s) to analyze. It must be of type `str` or `List[str]`, meaning analyze only one repository or more than one.
+Repository Selection
+===================
+The `GitAnalyzer` class requires a **repository_path** parameter, which can be either a single repository or multiple repositories. This parameter accepts both `str` and `List[str]` types.
 
-Furthermore, PyDriller supports both local and remote repositories: if you pass an URL, PyDriller will automatically create a temporary folder, clone the repository, run the study, and finally delete the temporary folder. 
+The library supports both local and remote repositories. When providing a URL, GitAnalyzer automatically handles the cloning process by creating a temporary directory, cloning the repository, performing the analysis, and cleaning up afterward.
 
-For example, the following are all possible inputs for `Repository`::
+Here are some valid initialization examples::
+
+    # Single local repository
+    path = "local/repo/path/"
     
-    # analyze only 1 local repository
-    url = "repos/pydriller/" 
+    # Multiple local repositories
+    path = ["repo1/path/", "repo2/path/"]
     
-    # analyze 2 local repositories
-    url = ["repos/pydriller/", "repos/anotherrepo/"]  
+    # Mixed local and remote repositories
+    path = ["local/repo/", "https://github.com/codingwithshawnyt/GitAnalyzer.git", "another/local/repo"]
     
-    # analyze both local and remote
-    url = ["repos/pydriller/", "https://github.com/apache/hadoop.git", "repos/anotherrepo"] 
-    
-    # analyze 1 remote repository
-    url = "https://github.com/apache/hadoop.git" 
+    # Single remote repository
+    path = "https://github.com/codingwithshawnyt/GitAnalyzer.git"
 
-To keep track of what project PyDriller is analyzing, the `Commit` object has a property called **project_name**.
+To identify which project is being analyzed, you can access the **project_name** property of the `Commit` object.
 
-Selecting the Commit Range
-==========================
+Commit Range Configuration
+=========================
 
-By default, PyDriller analyzes all the commits in the repository. However, filters can be applied to `Repository` to visit *only specific* commits.
+While GitAnalyzer processes all commits by default, you can narrow down the analysis using various filters:
 
-* **single** *(str)*: single hash of the commit. The visitor will be called only on this commit
+* **commit_hash** *(str)*: Analyze a specific commit by its hash
 
-*FROM*:
+*START POINT*:
 
-* **since** *(datetime)*: only commits after this date will be analyzed
-* **from\_commit** *(str)*: only commits after this commit hash will be analyzed
-* **from\_tag** *(str)*: only commits after this commit tag will be analyzed
+* **start_date** *(datetime)*: Begin analysis from this date
+* **start_commit** *(str)*: Start from this commit hash
+* **start_tag** *(str)*: Begin from this tag
 
-*TO*:
+*END POINT*:
 
-* **to** *(datetime)*: only commits up to this date will be analyzed
-* **to\_commit** *(str)*: only commits up to this commit hash will be analyzed
-* **to\_tag** *(str)*: only commits up to this commit tag will be analyzed
+* **end_date** *(datetime)*: Stop analysis at this date
+* **end_commit** *(str)*: Stop at this commit hash
+* **end_tag** *(str)*: Stop at this tag
 
-*ORDER*:
+*TRAVERSAL ORDER*:
 
-* **order** *(str)*: one between 'date-order', 'author-date-order', 'topo-order', and 'reverse' (see `this`_ for more information). **NOTE**: By default, PyDriller returns the commits from the oldest to the newest. If you need viceversa instead (from the newest to the oldest), use "order='reverse'".
+* **traversal_order** *(str)*: Choose between 'date-order', 'author-date-order', 'topo-order', or 'reverse'. **NOTE**: Default ordering is oldest to newest. Use "traversal_order='reverse'" for newest to oldest.
 
-.. _this: https://git-scm.com/docs/git-rev-list#_commit_ordering
+.. _ordering_info: https://git-scm.com/docs/git-rev-list#_commit_ordering
 
-Examples::
+Usage examples::
 
-    # Analyze single commit
-    Repository('path/to/the/repo', single='6411e3096dd2070438a17b225f44475136e54e3a').traverse_commits()
+    # Analyze specific commit
+    GitAnalyzer('repo/path', commit_hash='6411e3096dd2070438a17b225f44475136e54e3a').get_commits()
 
-    # Since 8/10/2016
-    Repository('path/to/the/repo', since=datetime(2016, 10, 8, 17, 0, 0)).traverse_commits()
+    # Since specific date
+    GitAnalyzer('repo/path', start_date=datetime(2016, 10, 8, 17, 0, 0)).get_commits()
 
-    # Between 2 dates
-    dt1 = datetime(2016, 10, 8, 17, 0, 0)
-    dt2 = datetime(2016, 10, 8, 17, 59, 0)
-    Repository('path/to/the/repo', since=dt1, to=dt2).traverse_commits()
+    # Date range analysis
+    start = datetime(2016, 10, 8, 17, 0, 0)
+    end = datetime(2016, 10, 8, 17, 59, 0)
+    GitAnalyzer('repo/path', start_date=start, end_date=end).get_commits()
 
     # Between tags
-    from_tag = 'tag1'
-    to_tag = 'tag2'
-    Repository('path/to/the/repo', from_tag=from_tag, to_tag=to_tag).traverse_commits()
+    GitAnalyzer('repo/path', start_tag='v1.0', end_tag='v2.0').get_commits()
 
-    # Up to a date
-    dt1 = datetime(2016, 10, 8, 17, 0, 0, tzinfo=to_zone)
-    Repository('path/to/the/repo', to=dt1).traverse_commits()
+    # Until specific date
+    end_date = datetime(2016, 10, 8, 17, 0, 0, tzinfo=timezone)
+    GitAnalyzer('repo/path', end_date=end_date).get_commits()
 
-    # !!!!! ERROR !!!!! THIS IS NOT POSSIBLE
-    Repository('path/to/the/repo', from_tag=from_tag, from_commit=from_commit).traverse_commits()
+    # !!!!! INVALID !!!!! MULTIPLE START POINTS NOT ALLOWED
+    GitAnalyzer('repo/path', start_tag='v1.0', start_commit='abc123').get_commits()
 
-**IMPORTANT**: it is **not** possible to configure more than one filter of the same category (for example, more than one *from*). It is also **not** possible to have the *single* filter together with other filters!
+**IMPORTANT**: You cannot combine multiple filters of the same category (e.g., multiple start points) or use the commit_hash filter with other filters!
 
+Commit Filtering
+===============
 
-Filtering commits
-=================
+GitAnalyzer provides several filtering options:
 
-PyDriller comes with a set of common commit filters that you can apply:
-
-* **only\_in\_branch** *(str)*: only analyses commits that belong to this branch.
-* **only\_no\_merge** *(bool)*: only analyses commits that are not merge commits.
-* **only\_authors** *(List[str])*: only analyses commits that are made by these authors. The check is made on the username, NOT the email.
-* **only\_commits** *(List[str])*: only these commits will be analyzed.
-* **only_releases** *(bool)*: only commits that are tagged ("release" is a term of GitHub, does not actually exist in Git)
-* **filepath** *(str)*: only commits that modified this file will be analyzed.
-* **only\_modifications\_with\_file\_types** *(List[str])*: only analyses commits in which **at least** one modification was done in that file type, e.g., if you pass ".java", it will visit only commits in which at least one Java file was modified; clearly, it will skip other commits (e.g., commits that did not modify Java files).
+* **branch** *(str)*: Analyze commits from a specific branch only
+* **exclude_merges** *(bool)*: Skip merge commits
+* **authors** *(List[str])*: Filter by commit authors (matches username, not email)
+* **commit_list** *(List[str])*: Analyze only specified commit hashes
+* **tagged_only** *(bool)*: Include only tagged commits
+* **file_path** *(str)*: Filter commits that modified a specific file
+* **file_types** *(List[str])*: Filter commits that modified specific file types
 
 Examples::
 
-    # Only commits in branch1
-    Repository('path/to/the/repo', only_in_branch='branch1').traverse_commits()
+    # Branch-specific analysis
+    GitAnalyzer('repo/path', branch='main').get_commits()
 
-    # Only commits in branch1 and no merges
-    Repository('path/to/the/repo', only_in_branch='branch1', only_no_merge=True).traverse_commits()
+    # Non-merge commits in specific branch
+    GitAnalyzer('repo/path', branch='main', exclude_merges=True).get_commits()
 
-    # Only commits of author "ishepard" (yeah, that's me)
-    Repository('path/to/the/repo', only_authors=['ishepard']).traverse_commits()
+    # Author-specific commits
+    GitAnalyzer('repo/path', authors=['username']).get_commits()
 
-    # Only these 3 commits
-    Repository('path/to/the/repo', only_commits=['hash1', 'hash2', 'hash3']).traverse_commits()
+    # Specific commit set
+    GitAnalyzer('repo/path', commit_list=['hash1', 'hash2', 'hash3']).get_commits()
 
-    # Only commit that modified "Matricula.javax" 
-    Repository('path/to/the/repo', filepath='Matricula.javax').traverse_commits()
+    # File-specific changes
+    GitAnalyzer('repo/path', file_path='src/main.cpp').get_commits()
 
-    # Only commits that modified a java file
-    Repository('path/to/the/repo', only_modifications_with_file_types=['.java']).traverse_commits()
+    # File type filtering
+    GitAnalyzer('repo/path', file_types=['.cpp']).get_commits()
 
-
-Configurations
+Advanced Configuration
 =====================
 
-Other than filtering commits or defining date ranges, Pydriller supports the following configurations:
+Additional configuration options include:
 
-* **include_refs** *(bool)*: whether to include refs and HEAD in commit analysis (equivalent of adding the flag :code:`--all`).
-* **include_remotes** *(bool)*: whether to include remote commits in analysis (equivalent of adding the flag :code:`--remotes`).
-* **clone_repo_to** *(str)*: if the repository is a URL, Pydriller will clone it in this directory.
-* **num_workers** *(int)*: number of workers (i.e., threads). By default is 1. Please note, if num_workers > 1 the commits order is not maintained.
-* **histogram** *(bool)*: uses :code:`git diff --histogram` instead of the normal git. See :ref:`git-diff-algorithms`.
-* **skip_whitespaces** *(bool)*: add the "-w" option when asking for the diff.
+* **include_references** *(bool)*: Include refs and HEAD in analysis (adds :code:`--all`)
+* **include_remote_refs** *(bool)*: Include remote references (adds :code:`--remotes`)
+* **clone_directory** *(str)*: Specify directory for cloning remote repositories
+* **parallel_jobs** *(int)*: Number of parallel processing threads (default: 1, note: commit order not guaranteed if > 1)
+* **use_histogram** *(bool)*: Enable histogram diff algorithm
+* **ignore_whitespace** *(bool)*: Ignore whitespace changes in diff
 
-.. _git-diff-algorithms:
+.. _diff_algorithms:
 
-Git Diff Algorithms
-===================
+Diff Algorithm Options
+=====================
 
-Git offers four different algorithms in :code:`git diff`:
+Git provides four diff algorithms:
 
 * Myers (default)
-* Minimal (improved Myers)
-* Patience (try to give contextual diff)
-* Histogram (kind of enhanced patience)
+* Minimal (Myers enhancement)
+* Patience (context-aware)
+* Histogram (enhanced patience)
 
-`Differences between four diff algorithms`_
+`Detailed algorithm comparison`_
 
-.. _Differences between four diff algorithms: https://git-scm.com/docs/git-diff#Documentation/git-diff.txt---diff-algorithmpatienceminimalhistogrammyers).
+.. _Detailed algorithm comparison: https://git-scm.com/docs/git-diff#Documentation/git-diff.txt---diff-algorithmpatienceminimalhistogrammyers
 
-Based on the comparison between Myers and Histogram in a study by `Nugroho, et al (2019)`_, various :code:`diff` algorithms in the :code:`git diff` command produced unequal `diff` outputs.
-From the result of patches analysis, they found that Histogram is better than Myers to show the changes of code that can be expected to recover the changing operations.
-Thus, in this tool, we implement histogram :code:`diff` algorithm to consider differences in source code.
+Research by `Nugroho, et al (2019)`_ shows that different algorithms produce varying results. Their analysis indicates that the Histogram algorithm provides more accurate change detection compared to Myers, particularly in identifying specific code modifications.
 
 .. _Nugroho, et al (2019): https://doi.org/10.1007/s10664-019-09772-z

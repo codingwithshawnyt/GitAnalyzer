@@ -3,34 +3,69 @@ from datetime import datetime
 
 import pytest
 
-from pydriller.metrics.process.commits_count import CommitsCount
+from gitanalyzer.metrics.process.commits_count import CommitsCount
 
-TEST_COMMIT_DATA = [
-    ('test-repos/pydriller', 'domain/developer.py', 'fdf671856b260aca058e6595a96a7a0fba05454b', 'ab36bf45859a210b0eae14e17683f31d19eea041', 2),
-    ('test-repos/pydriller', 'domain/developer.py', 'ab36bf45859a210b0eae14e17683f31d19eea041', 'fdf671856b260aca058e6595a96a7a0fba05454b', 2)
+# Test data for commit-based analysis
+COMMIT_TEST_CASES = [
+    (
+        'test-repos/gitanalyzer',
+        'domain/developer.py',
+        'fdf671856b260aca058e6595a96a7a0fba05454b',
+        'ab36bf45859a210b0eae14e17683f31d19eea041',
+        2
+    ),
+    (
+        'test-repos/gitanalyzer',
+        'domain/developer.py',
+        'ab36bf45859a210b0eae14e17683f31d19eea041',
+        'fdf671856b260aca058e6595a96a7a0fba05454b',
+        2
+    )
 ]
 
+@pytest.mark.parametrize(
+    'repository_path, file_path, start_commit, end_commit, expected_count',
+    COMMIT_TEST_CASES
+)
+def test_commit_based_count(repository_path, file_path, start_commit, end_commit, expected_count):
+    """
+    Verify commit counting functionality using commit hashes as boundaries
+    """
+    analyzer = CommitsCount(
+        path_to_repo=repository_path,
+        from_commit=start_commit,
+        to_commit=end_commit
+    )
+    
+    results = analyzer.count()
+    normalized_path = str(Path(file_path))
+    assert results[normalized_path] == expected_count
 
-@pytest.mark.parametrize('path_to_repo, filepath, from_commit, to_commit, expected', TEST_COMMIT_DATA)
-def test_with_commits(path_to_repo, filepath, from_commit, to_commit, expected):
-    metric = CommitsCount(path_to_repo=path_to_repo,
-                          from_commit=from_commit,
-                          to_commit=to_commit)
-    count = metric.count()
-    filepath = str(Path(filepath))
-    assert count[filepath] == expected
-
-
-TEST_DATE_DATA = [
-    ('test-repos/pydriller', 'domain/developer.py', datetime(2018, 3, 21), datetime(2018, 3, 23), 2)
+# Test data for date-based analysis
+DATE_TEST_CASES = [
+    (
+        'test-repos/gitanalyzer',
+        'domain/developer.py',
+        datetime(2018, 3, 21),
+        datetime(2018, 3, 23),
+        2
+    )
 ]
 
-
-@pytest.mark.parametrize('path_to_repo, filepath, since, to, expected', TEST_DATE_DATA)
-def test_with_dates(path_to_repo, filepath, since, to, expected):
-    metric = CommitsCount(path_to_repo=path_to_repo,
-                          since=since,
-                          to=to)
-    count = metric.count()
-    filepath = str(Path(filepath))
-    assert count[filepath] == expected
+@pytest.mark.parametrize(
+    'repository_path, file_path, start_date, end_date, expected_count',
+    DATE_TEST_CASES
+)
+def test_date_based_count(repository_path, file_path, start_date, end_date, expected_count):
+    """
+    Verify commit counting functionality using dates as boundaries
+    """
+    analyzer = CommitsCount(
+        path_to_repo=repository_path,
+        since=start_date,
+        to=end_date
+    )
+    
+    results = analyzer.count()
+    normalized_path = str(Path(file_path))
+    assert results[normalized_path] == expected_count

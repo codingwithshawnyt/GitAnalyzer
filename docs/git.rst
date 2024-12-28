@@ -1,48 +1,64 @@
 .. _git_toplevel:
 
-====
-Git
-====
+=============
+Git Interface
+=============
 
-Git is a wrapper for the most common utilities of Git, such as checkout and reset.
-For example, to checkout a specific commit or branch::
+The Git interface provides a convenient wrapper around common Git operations and utilities.
+You can perform various operations like checking out commits and analyzing repository history.
 
-    gr = Git('test-repos/git-1/')
-    gr.checkout('a7053a4dcd627f5f4f213dc9aa002eb1caf926f8')
+Basic Repository Operations
+-------------------------
 
-However, **be careful!** Git checkout changes the state of the repository on the hard
-disk, hence you should not use this command if other processes (maybe threads? or multiple 
-repository mining?) read from the same repository.
+Here's how to switch to a specific commit or branch::
 
-Moreover, Git can be used to obtain different information from the repository::
+    git_repo = Git('test-repos/git-1/')
+    git_repo.checkout('a7053a4dcd627f5f4f213dc9aa002eb1caf926f8')
 
-    gr = Git('test-repos/test1')
-    gr.get_list_commits()                  # get the list of all commits
-    gr.get_commit('cc5b002')               # get the specific commit
-    gr.files()                             # get the list of files present in the repo at the current commit
-    gr.total_commits()                     # get total number of commits
-    gr.get_commit_from_tag('v1.15')        # get the commit with tag v1.15
+**Important Note:** Exercise caution when using checkout operations! They modify the repository's
+state on disk, which could cause conflicts if multiple processes or threads are accessing
+the same repository simultaneously.
 
-Another very useful API (especially for researchers ;) ) is the one that, given a commit, allows you to retrieve
-all the commits that last "touched" the modified lines of the file (if you pass a bug fixing commit, it will retrieve the bug inducing). 
+Repository Information
+--------------------
 
-PS: Since PyDriller 1.9, this function can be customized to use "git hyper-blame" (check `this <https://commondatastorage.googleapis.com/chrome-infra-docs/flat/depot_tools/docs/html/depot_tools_tutorial.html#_setting_up>`_ for more info).
-Git hyper blame can be instructed to skip specific commits (like commits that refactor the code).
+The interface offers several methods to extract repository data::
 
-Let's see an example::
+    git_repo = Git('test-repos/test1')
+    git_repo.get_list_commits()                  # retrieve all repository commits
+    git_repo.get_commit('cc5b002')               # fetch a specific commit by hash
+    git_repo.files()                             # list all files in current commit
+    git_repo.total_commits()                     # count total repository commits
+    git_repo.get_commit_from_tag('v1.15')        # retrieve commit associated with tag
 
-    # commit abc modified line 1 of file A
-    # commit def modified line 2 of file A
-    # commit ghi modified line 3 of file A
-    # commit lmn deleted lines 1 and 2 of file A
+Line History Analysis
+-------------------
+
+One particularly valuable feature for developers and researchers is the ability to trace
+the history of specific code lines. When given a commit, the system can identify which
+previous commits last modified the changed lines (particularly useful for tracking down
+bug origins).
+
+Note: Starting from GitAnalyzer 1.9, this functionality supports "git hyper-blame" 
+(For more details, visit `the documentation <https://commondatastorage.googleapis.com/chrome-infra-docs/flat/depot_tools/docs/html/depot_tools_tutorial.html#_setting_up>`_).
+Git hyper-blame allows you to exclude specific commits, such as refactoring changes,
+from the analysis.
+
+Example usage::
+
+    # Timeline:
+    # - commit abc: modified line 1 in file A
+    # - commit def: modified line 2 in file A
+    # - commit ghi: modified line 3 in file A
+    # - commit lmn: removed lines 1 and 2 from file A
     
-    gr = Git('test-repos/test5')
+    git_repo = Git('test-repos/test5')
     
-    commit = gr.get_commit('lmn')
-    buggy_commits = gr.get_commits_last_modified_lines(commit)
-    print(buggy_commits)      # result: (abc, def)
+    target_commit = git_repo.get_commit('lmn')
+    historical_commits = git_repo.get_commits_last_modified_lines(target_commit)
+    print(historical_commits)      # outputs: (abc, def)
 
-Since in commit **lmn** 2 lines were deleted (line 1 and 2), PyDriller can retrieve the commits in which those lines
-were last modified (in our example, commit **abc** and **def**).
+In this example, when commit **lmn** removes lines 1 and 2, GitAnalyzer traces back
+to find the commits that last modified these lines (commits **abc** and **def**).
 
-Checkout the :ref:`api_reference_toplevel` of this class for the complete list of the available functions.
+For a comprehensive list of available functions, please refer to the :ref:`api_reference_toplevel`.

@@ -1,150 +1,130 @@
-# Copyright 2018 Davide Spadini
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 import logging
 import os
 import platform
 import sys
 import psutil
 from git import Repo
-from pydriller import Repository
+from gitanalyzer import Repository as GitAnalyzerRepo
 from datetime import datetime
 
+# Configure logging
 logging.basicConfig(level=logging.WARNING)
-PATH = os.getenv('GITHUB_WORKSPACE')
+WORKSPACE_PATH = os.getenv('GITHUB_WORKSPACE')
 
+def clone_repository(temp_directory) -> str:
+    repository_path = temp_directory.join("GitAnalyzer")
+    Repo.clone_from(url="https://github.com/codingwithshawnyt/GitAnalyzer", to_path=repository_path)
+    return str(repository_path)
 
-def clone_temp_repo(tmpdir) -> str:
-    repo_folder = tmpdir.join("pydriller")
-    Repo.clone_from(url="https://github.com/ishepard/pydriller.git", to_path=repo_folder)
-    return str(repo_folder)
-
-
-def test_memory(caplog, tmpdir):
-    if not PATH:
-        # Check we are on GitHub
+def test_memory_usage(caplog, temp_directory):
+    if not WORKSPACE_PATH:
+        # Ensure the environment is GitHub Actions
         return
 
     caplog.set_level(logging.WARNING)
 
-    repo_folder = clone_temp_repo(tmpdir)
+    repository_path = clone_repository(temp_directory)
 
-    logging.warning("Starting with nothing...")
-    diff_with_nothing, all_commits_with_nothing = mine(repo_folder, 0)
+    logging.warning("Initiating test with base case...")
+    diff_base, commits_base = analyze_commits(repository_path, 0)
 
-    logging.warning("Starting with everything...")
-    diff_with_everything, all_commits_with_everything = mine(repo_folder, 1)
+    logging.warning("Initiating test with full analysis...")
+    diff_full, commits_full = analyze_commits(repository_path, 1)
 
-    logging.warning("Starting with metrics...")
-    diff_with_metrics, all_commits_with_metrics = mine(repo_folder, 2)
+    logging.warning("Initiating test with metrics analysis...")
+    diff_metrics, commits_metrics = analyze_commits(repository_path, 2)
 
-    max_values = [max(all_commits_with_nothing),
-                  max(all_commits_with_everything),
-                  max(all_commits_with_metrics)]
-    logging.warning("Max values are: {}".format(max_values))
+    peak_memory_usage = [max(commits_base),
+                         max(commits_full),
+                         max(commits_metrics)]
+    logging.warning("Peak memory usage: {}".format(peak_memory_usage))
 
-    minutes_with_everything = (diff_with_everything.seconds % 3600) // 60
-    minutes_with_metrics = (diff_with_metrics.seconds % 3600) // 60
+    duration_full = (diff_full.seconds % 3600) // 60
+    duration_metrics = (diff_metrics.seconds % 3600) // 60
 
     logging.warning(
-        "TIME: With nothing: {}:{}:{} ({} commits/sec), "
-        "with everything: {}:{}:{}  ({} commits/sec), "
-        "with metrics: {}:{}:{}  ({} commits/sec)".format(
-            diff_with_nothing.seconds // 3600,
-            (diff_with_nothing.seconds % 3600) // 60,
-            diff_with_nothing.seconds % 60,
-            704 // diff_with_nothing.seconds if diff_with_nothing.seconds != 0 else 0,
-            diff_with_everything.seconds // 3600,
-            (diff_with_everything.seconds % 3600) // 60,
-            diff_with_everything.seconds % 60,
-            704 // diff_with_everything.seconds,
-            diff_with_metrics.seconds // 3600,
-            (diff_with_metrics.seconds % 3600) // 60,
-            diff_with_metrics.seconds % 60,
-            704 // diff_with_metrics.seconds
+        "DURATION: Base case: {}:{}:{} ({} commits/sec), "
+        "Full analysis: {}:{}:{}  ({} commits/sec), "
+        "Metrics analysis: {}:{}:{}  ({} commits/sec)".format(
+            diff_base.seconds // 3600,
+            (diff_base.seconds % 3600) // 60,
+            diff_base.seconds % 60,
+            704 // diff_base.seconds if diff_base.seconds != 0 else 0,
+            diff_full.seconds // 3600,
+            (diff_full.seconds % 3600) // 60,
+            diff_full.seconds % 60,
+            704 // diff_full.seconds,
+            diff_metrics.seconds // 3600,
+            (diff_metrics.seconds % 3600) // 60,
+            diff_metrics.seconds % 60,
+            704 // diff_metrics.seconds
         )
     )
 
-    if any(val > 250 for val in max_values) or \
-            minutes_with_everything >= 1 or \
-            minutes_with_metrics >= 2:
-        # if to analyze ~1000 commits requires more than 250MB of RAM,
-        # more than 1 minute without metrics or
-        # 2 minutes with metrics, print it
-        log(diff_with_nothing, all_commits_with_nothing,
-            diff_with_everything, all_commits_with_everything,
-            diff_with_metrics, all_commits_with_metrics)
-        raise Exception("Memory usage is too high, or it required too long to analyze all commits!")
+    if any(memory > 250 for memory in peak_memory_usage) or \
+            duration_full >= 1 or \
+            duration_metrics >= 2:
+        log_memory_and_time(diff_base, commits_base,
+                            diff_full, commits_full,
+                            diff_metrics, commits_metrics)
+        raise Exception("Excessive memory usage or analysis time!")
 
-    assert 704 == len(all_commits_with_nothing) == len(all_commits_with_everything) == len(all_commits_with_metrics)
+    assert 704 == len(commits_base) == len(commits_full) == len(commits_metrics)
 
+def log_memory_and_time(diff_base, commits_base,
+                        diff_full, commits_full,
+                        diff_metrics, commits_metrics):
+    report = "*PYTHON V{}.{} - OS: {}*\n" \
+             "*Maximum memory usage (MB)*\n" \
+             "Base case: {}, Full analysis: {}, Metrics analysis: {}\n" \
+             "*Minimum memory usage (MB)*\n" \
+             "Base case: {}, Full analysis: {}, Metrics analysis: {} \n" \
+             "*Processing Time*\n" \
+             "Base case: {}:{}:{}, Full analysis: {}:{}:{}, Metrics analysis: {}:{}:{} \n" \
+             "*Total commits processed*: {}\n" \
+             "*Processing speed (commits/sec):*\n" \
+             "Base case: {}, Full analysis: {}, Metrics analysis: {}"
 
-def log(diff_with_nothing, all_commits_with_nothing,
-        diff_with_everything, all_commits_with_everything,
-        diff_with_metrics, all_commits_with_metrics):
-    text = "*PYTHON V{}.{} - System: {}*\n" \
-           "*Max memory (MB)*\n" \
-           "With nothing: {}, with everything: {}, with metrics: {}\n" \
-           "*Min memory (MB)*\n" \
-           "With nothing: {}, with everything: {}, with metrics: {} \n" \
-           "*Time*\n" \
-           "With nothing: {}:{}:{}, with everything: {}:{}:{}, with metrics: {}:{}:{} \n" \
-           "*Total number of commits*: {}\n" \
-           "*Commits per second:*\n" \
-           "With nothing: {}, with everything: {}, with metrics: {}"
-
-    print(text.format(
+    print(report.format(
         sys.version_info[0], sys.version_info[1], platform.system(),
-        max(all_commits_with_nothing), max(all_commits_with_everything), max(all_commits_with_metrics),
-        min(all_commits_with_nothing), min(all_commits_with_everything), min(all_commits_with_metrics),
-        diff_with_nothing.seconds // 3600, (diff_with_nothing.seconds % 3600) // 60, diff_with_nothing.seconds % 60,
-        diff_with_everything.seconds // 3600, (diff_with_everything.seconds % 3600) // 60,
-        diff_with_everything.seconds % 60,
-        diff_with_metrics.seconds // 3600, (diff_with_metrics.seconds % 3600) // 60, diff_with_metrics.seconds % 60,
-        len(all_commits_with_nothing),
-        len(all_commits_with_nothing) / diff_with_nothing.seconds if diff_with_nothing.seconds > 0 else len(all_commits_with_nothing),
-        len(all_commits_with_everything) / diff_with_everything.seconds,
-        len(all_commits_with_metrics) / diff_with_metrics.seconds
+        max(commits_base), max(commits_full), max(commits_metrics),
+        min(commits_base), min(commits_full), min(commits_metrics),
+        diff_base.seconds // 3600, (diff_base.seconds % 3600) // 60, diff_base.seconds % 60,
+        diff_full.seconds // 3600, (diff_full.seconds % 3600) // 60,
+        diff_full.seconds % 60,
+        diff_metrics.seconds // 3600, (diff_metrics.seconds % 3600) // 60, diff_metrics.seconds % 60,
+        len(commits_base),
+        len(commits_base) / diff_base.seconds if diff_base.seconds > 0 else len(commits_base),
+        len(commits_full) / diff_full.seconds,
+        len(commits_metrics) / diff_metrics.seconds
     ))
 
+def analyze_commits(repository, analysis_type):
+    process = psutil.Process(os.getpid())
+    cutoff_date = datetime(2021, 12, 1)
+    memory_usage_records = []
 
-def mine(repo, _type):
-    p = psutil.Process(os.getpid())
-    dt2 = datetime(2021, 12, 1)
-    all_commits = []
+    start_time = datetime.now()
+    for commit in GitAnalyzerRepo(repository, to=cutoff_date).traverse_commits():
+        current_memory = process.memory_info()[0] / (2 ** 20)
+        memory_usage_records.append(current_memory)
 
-    start = datetime.now()
-    for commit in Repository(repo, to=dt2).traverse_commits():
-        memory = p.memory_info()[0] / (2 ** 20)
-        all_commits.append(memory)
+        author = commit.author.name  # noqa
 
-        h = commit.author.name  # noqa
-
-        if _type == 0:
+        if analysis_type == 0:
             continue
 
-        for mod in commit.modified_files:
-            dd = mod.diff  # noqa
+        for modification in commit.modified_files:
+            diff_data = modification.diff  # noqa
 
-            if _type == 1:
+            if analysis_type == 1:
                 continue
 
-            if mod.filename.endswith('.py'):
-                cc = mod.complexity  # noqa
+            if modification.filename.endswith('.py'):
+                complexity = modification.complexity  # noqa
 
-    end = datetime.now()
+    end_time = datetime.now()
 
-    diff = end - start
+    duration = end_time - start_time
 
-    return diff, all_commits
+    return duration, memory_usage_records

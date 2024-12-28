@@ -1,62 +1,59 @@
 from os import path
 from setuptools import setup, find_packages
 
-with open('requirements.txt') as reqs_file:
-    requirements = reqs_file.read().splitlines()
+# Reading requirements from files
+def load_requirements(file_name):
+    with open(file_name) as file:
+        return file.read().strip().split('\n')
 
-with open('test-requirements.txt') as reqs_file:
-    test_requirements = reqs_file.read().splitlines()
+requirements_main = load_requirements('requirements.txt')
+requirements_test = load_requirements('test-requirements.txt')
 
-# Get the long description from the relevant file
-long_description = 'PyDriller is a Python framework that helps developers on ' \
-                   'mining software repositories. With PyDriller' \
-                   ' you can easily extract information from any Git ' \
-                   'repository, such as commits, developers, ' \
-                   'modifications, diffs, and source codes, and ' \
-                   'quickly export CSV files.'
+# Detailed description of the project
+detailed_description = (
+    'GitAnalyzer is a versatile Python toolkit for analyzing Git repositories. '
+    'It simplifies the process of extracting data such as commits, contributors, '
+    'file changes, diffs, and source code, and supports exporting data to CSV format.'
+)
 
-
-def get_version():
-    with open(path.join(path.dirname(__file__), 'pydriller', '__init__.py')) as f:
-        for line in f:
+# Fetching the version from the package's __init__.py
+def fetch_version():
+    init_path = path.join(path.dirname(__file__), 'pydriller', '__init__.py')
+    with open(init_path) as file:
+        for line in file:
             if line.startswith('__version__'):
-                delim = '"' if '"' in line else "'"
-                return line.split(delim)[1]
-        raise RuntimeError("Unable to find version string.")
-
+                version_delimiter = '"' if '"' in line else "'"
+                return line.split(version_delimiter)[1]
+    raise RuntimeError("Version string not found.")
 
 setup(
-    name='PyDriller',
-    description='Framework for MSR',
-    long_description=long_description,
-    author='Davide Spadini',
-    author_email='spadini.davide@gmail.com',
-    version=get_version(),
+    name='GitAnalyzer',
+    description='A toolkit for Mining Software Repositories (MSR)',
+    long_description=detailed_description,
+    author='Shawn Ray',
+    author_email='shawnray5699@gmail.com',
+    version=fetch_version(),
     packages=find_packages('.', exclude=['tests*']),
-    url='https://github.com/ishepard/pydriller',
+    url='https://github.com/codingwithshawnyt/GitAnalyzer',  # Assuming the URL remains unchanged
     license='Apache License',
-    package_dir={'pydriller': 'pydriller'},
+    package_dir={'gitanalyzer': 'gitanalyzer'},
     python_requires='>=3.5',
-    install_requires=requirements,
-    tests_require=requirements + test_requirements,
+    install_requires=requirements_main,
+    tests_require=requirements_main + requirements_test,
     classifiers=[
-            # How mature is this project? Common values are
-            #   3 - Alpha
-            #   4 - Beta
-            #   5 - Production/Stable
-            'Development Status :: 5 - Production/Stable',
-            'Environment :: Console',
-            'Intended Audience :: Developers',
-            'Intended Audience :: Science/Research',
-            'License :: OSI Approved :: Apache Software License',
-            'Programming Language :: Python :: 3.6',
-            'Programming Language :: Python :: 3.7',
-            'Programming Language :: Python :: 3.8',
-            'Programming Language :: Python :: 3.9',
-            'Topic :: Software Development :: Libraries :: Python Modules',
-            "Operating System :: OS Independent",
-            "Operating System :: POSIX",
-            "Operating System :: Microsoft :: Windows",
-            "Operating System :: MacOS :: MacOS X",
-            ]
+        'Development Status :: 5 - Production/Stable',
+        'Environment :: Console',
+        'Intended Audience :: Developers',
+        'Intended Audience :: Science/Research',
+        'License :: OSI Approved :: Apache Software License',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
+        'Topic :: Software Development :: Libraries :: Python Modules',
+        "Operating System :: OS Independent",
+        "Operating System :: POSIX",
+        "Operating System :: Microsoft :: Windows",
+        "Operating System :: MacOS :: MacOS X",
+    ]
 )
