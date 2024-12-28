@@ -7,11 +7,9 @@
 	<img src="https://img.shields.io/github/last-commit/codingwithshawnyt/GitAnalyzer?style=default&logo=git&logoColor=white&color=0080ff" alt="last-commit">
 	<img src="https://img.shields.io/github/languages/top/codingwithshawnyt/GitAnalyzer?style=default&color=0080ff" alt="repo-top-language">
 	<img src="https://img.shields.io/github/languages/count/codingwithshawnyt/GitAnalyzer?style=default&color=0080ff" alt="repo-language-count">
-	<!-- New Badges -->
-	<img src="https://img.shields.io/github/workflow/status/codingwithshawnyt/GitAnalyzer/CI" alt="Build Status">
-	<img src="https://img.shields.io/codecov/c/github/codingwithshawnyt/GitAnalyzer" alt="Coverage">
 </p>
 <br>
+
 ## 🔗 Table of Contents
 
 - [📍 Overview](#-overview)
