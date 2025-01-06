@@ -10,7 +10,7 @@
 	<a href="https://pypi.org/project/GitAnalyzer/"><img src="https://static.pepy.tech/badge/matplotlib-ai/month" alt="PyPI Downloads"></a>
 </p>
 <br>
-
+<h3>Disclosure: This project received funding from Texas A&M University for research purposes.</h3><br>
 ## 🔗 Table of Contents
 
 - [📍 Overview](#-overview)
